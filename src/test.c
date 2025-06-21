@@ -56,6 +56,7 @@ void load_image(const char *filename, ImageBatch *batch, int num_images)
     new_meta.timestamp = 0; // example time (should be using unix timestamp)
     new_meta.bits_pixel = 8;
     new_meta.camera = "rgb";
+    new_meta.obid = 0;
     size_t meta_size = metadata__get_packed_size(&new_meta);
     uint8_t meta_buf[meta_size];
     metadata__pack(&new_meta, meta_buf);

@@ -29,6 +29,7 @@ void module()
         new_meta.timestamp = input_meta->timestamp;
         new_meta.bits_pixel = input_meta->bits_pixel;
         new_meta.camera = input_meta->camera;
+        new_meta.obid = input_meta->obid;
 
         /* Append the image to the result batch */
         append_result_image(input_image_data, size, &new_meta);

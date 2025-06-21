@@ -39,6 +39,7 @@ void unpack_metadata()
         metadata->metadata[image_index]->timestamp = meta->timestamp;
         metadata->metadata[image_index]->bits_pixel = meta->bits_pixel;
         metadata->metadata[image_index]->image_offset = offset;
+        metadata->metadata[image_index]->obid = meta->obid;
         metadata->metadata[image_index]->camera = strdup(meta->camera);
         metadata->metadata[image_index]->n_items = meta->n_items;
         metadata->metadata[image_index]->items = malloc(meta->n_items * sizeof(MetadataItem *));

@@ -21,6 +21,7 @@ void module()
         int timestamp = input_meta->timestamp;
         int bits_pixel = input_meta->bits_pixel;
         char *camera = input_meta->camera;
+        int obid = input_meta->obid;
 
         unsigned char *input_image_data;
         get_image_data(i, &input_image_data);
@@ -55,6 +56,7 @@ void module()
         new_meta.timestamp = timestamp;
         new_meta.bits_pixel = bits_pixel;
         new_meta.camera = camera;
+        new_meta.obid = obid;
 
         /* Append the image to the result batch */
         append_result_image(output_image_data, output_image_size, &new_meta);

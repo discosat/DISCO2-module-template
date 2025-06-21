@@ -21,6 +21,7 @@ void module()
         int timestamp = input_meta->timestamp;
         int bits_pixel = input_meta->bits_pixel;
         char *camera = input_meta->camera;
+        int obid = input_meta->obid;
 
         int flip_height = height * flip_percent;
 
@@ -65,6 +66,7 @@ void module()
         new_meta.timestamp = timestamp;
         new_meta.bits_pixel = bits_pixel;
         new_meta.camera = camera;
+        new_meta.obid = obid;
 
         append_result_image(output_image_data, size, &new_meta);
         free(input_image_data);

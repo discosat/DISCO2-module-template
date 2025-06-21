@@ -29,6 +29,7 @@ void module()
         int timestamp = input_meta->timestamp;
         int bits_pixel = input_meta->bits_pixel;
         char *camera = input_meta->camera;
+        int obid = input_meta->obid;
 
         /* Get custom metadata values */
         // int example_bool = get_custom_metadata_bool(input_meta, "example_bool");
@@ -77,6 +78,7 @@ void module()
         new_meta.timestamp = timestamp;
         new_meta.bits_pixel = bits_pixel;
         new_meta.camera = camera;
+        new_meta.obid = obid;
 
         /* Add custom metadata key-value */
         add_custom_metadata_bool(&new_meta, "example_bool", true);

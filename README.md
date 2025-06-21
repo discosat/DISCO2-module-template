@@ -64,6 +64,7 @@ struct Metadata
   int32_t timestamp;
   int32_t bits_pixel;
   int32_t image_offset;
+  int32_t obid;
   char *camera;
   MetadataItem **items;
 };
@@ -87,6 +88,7 @@ new_meta.channels = channels;
 new_meta.timestamp = timestamp;
 new_meta.bits_pixel = bits_pixel;
 new_meta.camera = camera;
+new_meta.obid = obid;
 ```
 
 Make sure to append the image, and its metadata before returning:
