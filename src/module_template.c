@@ -41,6 +41,7 @@ void module()
         new_meta.timestamp = input_meta->timestamp;
         new_meta.bits_pixel = input_meta->bits_pixel;
         new_meta.camera = input_meta->camera;
+        new_meta.obid = input_meta->obid;
 
         /* Add custom metadata key-value, if any new meta data is to be added */
         // add_custom_metadata_bool(&new_meta, "example_bool", 1);

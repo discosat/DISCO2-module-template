@@ -39,6 +39,7 @@ void module()
         new_meta.timestamp = metadata->timestamp;
         new_meta.bits_pixel = 8;
         new_meta.camera = metadata->camera;
+        new_meta.obid = metadata->obid;
 
         /* Append the image to the result batch */
         append_result_image(demosaicedImage_1byte.data, new_meta.size, &new_meta);
