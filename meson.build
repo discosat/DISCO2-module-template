@@ -9,7 +9,7 @@ proto_c_dep = meson.get_compiler('c').find_library('protobuf-c', required : fals
 
 # Source files
 sources = [
-    'src/module_template.c', # module file (REMEMBER TO CHANGE!)
+    'src/module_examples/id.c', # module file (REMEMBER TO CHANGE!)
     'src/utils/memory_util.c',
     'src/utils/config_util.c',
     'src/utils/batch_util.c',
