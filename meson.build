@@ -1,48 +1,68 @@
-project('example', 'c', 'cpp')
-project_name = 'example'
+project('test_pipeline', 'c', 'cpp')
+project_name = 'test_pipeline'
 
 # Compiler and linker flags
-cflags = ['-Wall']
+cflags = ['-Wall', '-g', '-O0']
+cppflags = ['-Wall', '-std=c++17', '-g', '-O0']
 
 # Dependencies
-proto_c_dep = meson.get_compiler('c').find_library('protobuf-c', required : false)
+cc = meson.get_compiler('c')
+cpp = meson.get_compiler('cpp')
+proto_c_dep = cc.find_library('protobuf-c', required: false)
+opencv_dep = dependency('opencv4', required: true)  # You can change to opencv if opencv4 fails
 
 # Source files
-sources = [
-    'src/module_examples/id.c', # module file (REMEMBER TO CHANGE!)
+c_sources = [
     'src/utils/memory_util.c',
     'src/utils/config_util.c',
     'src/utils/batch_util.c',
     'src/utils/error_util.c',
+    'src/utils/logger.c', 
     'src/utils/metadata_util.c',
     'src/utils/metadata.pb-c.c',
 ]
 
+# Change this to switch the active module!
+active_module = 'src/detection_dead_pixel.c'  # <-- Change this to switch modules, e.g. 'src/distortion_correction.cpp'
+
+# Decide whether to compile it as C or C++
+use_cpp = active_module.endswith('.cpp')
+
+cpp_sources = []
+if use_cpp
+    cpp_sources += active_module
+else
+    c_sources += active_module
+endif
+
 dirs = include_directories(
-    'src/include', 
+    'src/include',
     'src/include/utils',
 )
 
 # Shared library (SO)
-shared_library(project_name, sources,
+shared_library(project_name, cpp_sources + c_sources,
     include_directories: dirs,
     c_args: cflags + ['-DSHARED_MEMORY=1'],
-    dependencies: [proto_c_dep]
+    cpp_args: cppflags + ['-DSHARED_MEMORY=1'],
+    dependencies: [proto_c_dep, opencv_dep]
 )
 
 # Check for cross-compiling
-if not get_option('cross-compile')
+if not get_option('cross-compile') # = ./configure test
     # If not cross-compiling, include the executable target
-    sources += 'src/test.c'
-    sources += 'src/utils/yaml_parser.c'
+    test_sources = cpp_sources + c_sources + [
+        'src/test.c',
+        'src/utils/yaml_parser.c'
+    ]
 
     libyaml_dep = dependency('yaml-0.1')
-    m_dep = meson.get_compiler('c').find_library('m', required : false)
+    m_dep = cc.find_library('m', required: false)
 
-    # Executable
-    executable(project_name + '-exec', sources,
+    executable(project_name + '-exec', test_sources,
         include_directories: dirs,
         c_args: cflags + ['-g', '-DSHARED_MEMORY=0'],
-        dependencies: [libyaml_dep, m_dep, proto_c_dep]
+        cpp_args: cppflags + ['-g', '-DSHARED_MEMORY=0'],
+        dependencies: [libyaml_dep, m_dep, proto_c_dep, opencv_dep]
     )
 endif
