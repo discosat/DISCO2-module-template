@@ -17,7 +17,7 @@ c_sources = [
     'src/utils/config_util.c',
     'src/utils/batch_util.c',
     'src/utils/error_util.c',
-    'src/utils/logger.c', 
+    #'src/utils/logger.c', 
     'src/utils/metadata_util.c',
     'src/utils/metadata.pb-c.c',
 ]
@@ -66,3 +66,13 @@ if not get_option('cross-compile') # = ./configure test
         dependencies: [libyaml_dep, m_dep, proto_c_dep, opencv_dep]
     )
 endif
+
+# Standalone demosaic test executable
+executable(
+    'test_demosaic',
+    ['src/test_demosaic.cpp', 'src/utils/metadata.pb-c.c'],
+    include_directories: dirs,
+    c_args: cflags,
+    dependencies: [opencv_dep, proto_c_dep],
+)
+
