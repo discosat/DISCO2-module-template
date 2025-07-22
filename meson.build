@@ -23,7 +23,7 @@ c_sources = [
 ]
 
 # Change this to switch the active module!
-active_module = 'src/detection_dead_pixel.c'  # <-- Change this to switch modules, e.g. 'src/distortion_correction.cpp'
+active_module = 'src/dead_pixels.c'  # <-- Change this to switch modules, e.g. 'src/distortion_correction.cpp'
 
 # Decide whether to compile it as C or C++
 use_cpp = active_module.endswith('.cpp')
