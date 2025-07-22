@@ -141,6 +141,7 @@ void module()
 /* Main function of module (NO NEED TO MODIFY) */
 ImageBatch run(ImageBatch *input_batch, ModuleParameterList *module_parameter_list, int *ipc_error_pipe)
 {
+    printf("I am here hehehe\n");
     ImageBatch result_batch;
     result = &result_batch;
     input = input_batch;
