@@ -28,7 +28,7 @@ void module()
 
     uint16_t width = meta->width;
     uint16_t height = meta->height;
-    size_t num_pixels = (size_t)width * height;
+    size_t num_pixels = (size_t)width * height * 2; //2 is the numnber of channels
 
     // Allocate accumulator to count how many times each pixel is dark
     uint16_t *accumulator = calloc(num_pixels, sizeof(uint16_t));
@@ -49,7 +49,7 @@ void module()
         unsigned char *image_data;
         size_t size = get_image_data(i, &image_data);
         if (!image_data || size != num_pixels) {
-            printf("[ERROR] Invalid image data for image %d\n", i);
+            printf("[ERROR] Invalid image data for image %d\n", i); //this prints
             free(accumulator);
             return;
         }
