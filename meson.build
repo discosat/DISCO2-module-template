@@ -1,5 +1,5 @@
-project('test_pipeline', 'c', 'cpp')
-project_name = 'test_pipeline'
+project('module1', 'c', 'cpp')
+project_name = 'module1'
 
 # Compiler and linker flags
 cflags = ['-Wall', '-g', '-O0']
