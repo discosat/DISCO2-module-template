@@ -1,5 +1,6 @@
 #include "module.h"
 #include "util.h"
+#include "globals.h"
 #include <opencv2/opencv.hpp>
 
 /* Define custom error codes */
@@ -102,7 +103,7 @@ void module()
 /* END MODULE IMPLEMENTATION */
 
 /* Main function of module (NO NEED TO MODIFY) */
-ImageBatch run(ImageBatch *input_batch, ModuleParameterList *module_parameter_list, int *ipc_error_pipe)
+extern "C" ImageBatch run(ImageBatch *input_batch, ModuleParameterList *module_parameter_list, int *ipc_error_pipe)
 {
     ImageBatch result_batch;
     result = &result_batch;
