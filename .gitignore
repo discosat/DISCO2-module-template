@@ -3,4 +3,5 @@
 .vscode
 *.png
 builddir/*
-testing
+testing-dead-pixels
+testing-demosaic

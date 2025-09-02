@@ -14,10 +14,6 @@ void module()
     /* Get number of images in input batch */
     int num_images = get_input_num_images();
     
-    /* Retrieve module parameters by name (defined in config.yaml) */
-    // Example: int bayer_pattern = get_param_int("bayer_pattern");
-    // Example: int output_channels = get_param_int("output_channels");
-    
     /* Process each image in the batch */
     for (int i = 0; i < num_images; ++i)
     {
@@ -35,19 +31,35 @@ void module()
         unsigned char *input_image_data;
         size_t input_size = get_image_data(i, &input_image_data);
         
-        /* Create OpenCV Mat for raw Bayer image (assuming 8-bit grayscale input) */
-        cv::Mat rawImage(height, width, CV_8UC1, input_image_data);
+        /* Create OpenCV Mat for raw image (12-bit data in 16-bit container) */
+        cv::Mat rawImage(height, width, CV_16UC1, (uint16_t*)input_image_data);
+        
+        /* Mask to 12-bit values (remove upper 4 bits) */
+        uint16_t* ptr = (uint16_t*)rawImage.data;
+        size_t total_pixels = width * height;
+        for (size_t j = 0; j < total_pixels; j++) {
+            ptr[j] = ptr[j] & 0x0FFF;  // Keep only lower 12 bits
+        }
+        
+        /* Convert 12-bit to 8-bit using bit shift */
+        cv::Mat rawImage8bit(height, width, CV_8UC1);
+        uint16_t* src = (uint16_t*)rawImage.data;
+        uint8_t* dst = (uint8_t*)rawImage8bit.data;
+        
+        for (size_t j = 0; j < total_pixels; j++) {
+            dst[j] = (uint8_t)(src[j] >> 4);  // Bit shift from 12-bit to 8-bit
+        }
+        
+        /* Apply vertical flip to match camera orientation */
+        cv::Mat flippedImage;
+        cv::flip(rawImage8bit, flippedImage, 0);  // 0 means vertical flip
+        
+        /* Perform demosaicing with BGGR pattern */
         cv::Mat demosaicedImage;
-        
-        /* Perform demosaicing - convert Bayer pattern to RGB */
-        cv::cvtColor(rawImage, demosaicedImage, cv::COLOR_BayerGR2RGB);
-        
-        /* Normalize to full 8-bit range */
-        cv::Mat demosaicedImage_normalized;
-        cv::normalize(demosaicedImage, demosaicedImage_normalized, 0, 255, cv::NORM_MINMAX, CV_8UC3);
+        cv::cvtColor(flippedImage, demosaicedImage, cv::COLOR_BayerBG2BGR);
         
         /* Calculate output image size */
-        size_t output_size = demosaicedImage_normalized.total() * demosaicedImage_normalized.elemSize();
+        size_t output_size = demosaicedImage.total() * demosaicedImage.elemSize();
         
         /* Allocate memory for output image data */
         unsigned char *output_image_data = (unsigned char *)malloc(output_size);
@@ -58,15 +70,15 @@ void module()
             signal_error_and_exit(MALLOC_ERR);
         }
         
-        /* Copy normalized data to output buffer */
-        memcpy(output_image_data, demosaicedImage_normalized.data, output_size);
+        /* Copy demosaiced data to output buffer */
+        memcpy(output_image_data, demosaicedImage.data, output_size);
         
         /* Create output image metadata */
         Metadata new_meta = METADATA__INIT;
         new_meta.size = output_size;
         new_meta.width = width;
         new_meta.height = height;
-        new_meta.channels = 3; // RGB output
+        new_meta.channels = 3; // BGR output
         new_meta.timestamp = timestamp;
         new_meta.bits_pixel = 8; // 8-bit output
         new_meta.camera = camera;
@@ -74,8 +86,9 @@ void module()
         
         /* Add custom metadata for demosaicing info */
         add_custom_metadata_string(&new_meta, "processing", "demosaiced");
-        add_custom_metadata_string(&new_meta, "bayer_pattern", "GR");
+        add_custom_metadata_string(&new_meta, "bayer_pattern", "BGGR");
         add_custom_metadata_int(&new_meta, "output_channels", 3);
+        add_custom_metadata_string(&new_meta, "orientation", "flipped_vertical");
         
         /* Append the processed image to the result batch */
         append_result_image(output_image_data, output_size, &new_meta);
@@ -85,6 +98,7 @@ void module()
         free(output_image_data);
     }
 }
+
 /* END MODULE IMPLEMENTATION */
 
 /* Main function of module (NO NEED TO MODIFY) */
@@ -95,10 +109,8 @@ ImageBatch run(ImageBatch *input_batch, ModuleParameterList *module_parameter_li
     input = input_batch;
     config = module_parameter_list;
     error_pipe = ipc_error_pipe;
-    
     initialize();
     module();
     finalize();
-    
     return result_batch;
 }

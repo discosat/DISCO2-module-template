@@ -23,7 +23,7 @@ c_sources = [
 ]
 
 # Change this to switch the active module!
-active_module = 'src/dead_pixels.c'  # <-- Change this to switch modules, e.g. 'src/distortion_correction.cpp'
+active_module = 'src/demosaic_module.cpp'  # <-- Change this to switch modules, e.g. 'src/distortion_correction.cpp'
 
 # Decide whether to compile it as C or C++
 use_cpp = active_module.endswith('.cpp')
@@ -68,11 +68,11 @@ if not get_option('cross-compile') # = ./configure test
 endif
 
 # Standalone demosaic test executable
-executable(
-    'test_demosaic',
-    ['src/test_demosaic.cpp', 'src/utils/metadata.pb-c.c'],
-    include_directories: dirs,
-    c_args: cflags,
-    dependencies: [opencv_dep, proto_c_dep],
-)
+#executable(
+#    'test',
+#    ['src/test.c', 'src/utils/metadata.pb-c.c'],
+#    include_directories: dirs,
+#    c_args: cflags,
+#    dependencies: [opencv_dep, proto_c_dep],
+#)
 
