@@ -54,9 +54,9 @@ void module()
         cv::Mat flippedImage;
         cv::flip(rawImage8bit, flippedImage, 0);  // 0 means vertical flip
         
-        /* Perform demosaicing with BGGR pattern */
+        /* Perform demosaicing with GRBG pattern */
         cv::Mat demosaicedImage;
-        cv::cvtColor(flippedImage, demosaicedImage, cv::COLOR_BayerBG2BGR);
+        cv::cvtColor(flippedImage, demosaicedImage, cv::COLOR_BayerGR2BGR);
         
         /* Calculate output image size */
         size_t output_size = demosaicedImage.total() * demosaicedImage.elemSize();
@@ -86,7 +86,7 @@ void module()
         
         /* Add custom metadata for demosaicing info */
         add_custom_metadata_string(&new_meta, "processing", "demosaiced");
-        add_custom_metadata_string(&new_meta, "bayer_pattern", "BGGR");
+        add_custom_metadata_string(&new_meta, "bayer_pattern", "GRBG");
         add_custom_metadata_int(&new_meta, "output_channels", 3);
         add_custom_metadata_string(&new_meta, "orientation", "flipped_vertical");
         
