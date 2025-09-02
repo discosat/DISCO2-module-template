@@ -35,25 +35,9 @@ void module()
         /* Create OpenCV Mat for raw image (12-bit data in 16-bit container) */
         cv::Mat rawImage(height, width, CV_16UC1, (uint16_t*)input_image_data);
         
-        /* Mask to 12-bit values (remove upper 4 bits) */
-        uint16_t* ptr = (uint16_t*)rawImage.data;
-        size_t total_pixels = width * height;
-        for (size_t j = 0; j < total_pixels; j++) {
-            ptr[j] = ptr[j] & 0x0FFF;  // Keep only lower 12 bits
-        }
-        
-        /* Convert 12-bit to 8-bit using bit shift */
-        cv::Mat rawImage8bit(height, width, CV_8UC1);
-        uint16_t* src = (uint16_t*)rawImage.data;
-        uint8_t* dst = (uint8_t*)rawImage8bit.data;
-        
-        for (size_t j = 0; j < total_pixels; j++) {
-            dst[j] = (uint8_t)(src[j] >> 4);  // Bit shift from 12-bit to 8-bit
-        }
-        
         /* Apply vertical flip to match camera orientation */
         cv::Mat flippedImage;
-        cv::flip(rawImage8bit, flippedImage, 0);  // 0 means vertical flip
+        cv::flip(rawImage, flippedImage, 0);  // 0 means vertical flip
         
         /* Perform demosaicing with GRBG pattern */
         cv::Mat demosaicedImage;
