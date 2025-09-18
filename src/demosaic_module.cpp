@@ -35,16 +35,16 @@ void module()
         /* Create OpenCV Mat for raw image (12-bit data in 16-bit container) */
         cv::Mat rawImage(height, width, CV_16UC1, (uint16_t*)input_image_data);
         
-        /* Apply vertical flip to match camera orientation */
-        cv::Mat flippedImage;
-        cv::flip(rawImage, flippedImage, 0);  // 0 means vertical flip
-        
         /* Perform demosaicing with GRBG pattern */
         cv::Mat demosaicedImage;
-        cv::cvtColor(flippedImage, demosaicedImage, cv::COLOR_BayerGR2BGR);
+        cv::cvtColor(rawImage, demosaicedImage, cv::COLOR_BayerRG2BGR);
+
+        /* Apply vertical flip to match camera orientation */
+        cv::Mat flippedImage;
+        cv::flip(demosaicedImage, finalImage, 0);  // 0 means vertical flip
         
         /* Calculate output image size */
-        size_t output_size = demosaicedImage.total() * demosaicedImage.elemSize();
+        size_t output_size = finalImage.total() * finalImage.elemSize();
         
         /* Allocate memory for output image data */
         unsigned char *output_image_data = (unsigned char *)malloc(output_size);
@@ -56,7 +56,7 @@ void module()
         }
         
         /* Copy demosaiced data to output buffer */
-        memcpy(output_image_data, demosaicedImage.data, output_size);
+        memcpy(output_image_data, finalImage.data, output_size);
         
         /* Create output image metadata */
         Metadata new_meta = METADATA__INIT;
@@ -87,7 +87,7 @@ void module()
 /* END MODULE IMPLEMENTATION */
 
 /* Main function of module (NO NEED TO MODIFY) */
-extern "C" ImageBatch run(ImageBatch *input_batch, ModuleParameterList *module_parameter_list, int *ipc_error_pipe)
+ImageBatch run(ImageBatch *input_batch, ModuleParameterList *module_parameter_list, int *ipc_error_pipe)
 {
     ImageBatch result_batch;
     result = &result_batch;
