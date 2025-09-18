@@ -40,11 +40,22 @@ void module()
         cv::cvtColor(rawImage, demosaicedImage, cv::COLOR_BayerRG2BGR);
 
         /* Apply vertical flip to match camera orientation */
-        cv::Mat finalImage;
-        cv::flip(demosaicedImage, finalImage, 0);  // 0 means vertical flip
+        //cv::Mat finalImage;
+        //cv::flip(demosaicedImage, finalImage, 0);  // 0 means vertical flip
         
+        cv::Point2f center(width / 2.0f, height / 2.0f);
+        double angle = 180;
+        double scale = 1.0;
+
+        cv::Mat rotation_matrix = cv::getRotationMatrix2D(center, angle, scale);
+        cv::Mat rotated_image;
+        cv::warpAffine(demosaicedImage, rotated_image, rotation_matrix, cv::Size(width, height));
+
+        cv::Mat normalizedImage;
+        cv::normalize(rotated_image, normalizedImage, 0, 255, cv::NORM_MINMAX);
+
         /* Calculate output image size */
-        size_t output_size = finalImage.total() * finalImage.elemSize();
+        size_t output_size = normalizedImage.total() * normalizedImage.elemSize();
         
         /* Allocate memory for output image data */
         unsigned char *output_image_data = (unsigned char *)malloc(output_size);
@@ -56,7 +67,7 @@ void module()
         }
         
         /* Copy demosaiced data to output buffer */
-        memcpy(output_image_data, finalImage.data, output_size);
+        memcpy(output_image_data, normalizedImage.data, output_size);
         
         /* Create output image metadata */
         Metadata new_meta = METADATA__INIT;
@@ -71,7 +82,6 @@ void module()
         
         /* Add custom metadata for demosaicing info */
         add_custom_metadata_string(&new_meta, "processing", "demosaiced");
-        add_custom_metadata_string(&new_meta, "bayer_pattern", "GRBG");
         add_custom_metadata_int(&new_meta, "output_channels", 3);
         add_custom_metadata_string(&new_meta, "orientation", "flipped_vertical");
         

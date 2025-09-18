@@ -1,5 +1,5 @@
-project('module1', 'c', 'cpp')
-project_name = 'module1'
+project('demosaic', 'c', 'cpp')
+project_name = 'demosaic'
 
 # Compiler and linker flags
 cflags = ['-Wall', '-g', '-O0']
