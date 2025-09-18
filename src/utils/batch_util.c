@@ -49,6 +49,17 @@ void append_result_image(unsigned char *data, uint32_t data_size, Metadata *meta
     size_t meta_size = metadata__get_packed_size(meta);
     uint8_t meta_buf[meta_size];
     metadata__pack(meta, meta_buf);
+    
+    /* Verify packed metadata by unpacking it */
+    Metadata *unpacked_meta = metadata__unpack(NULL, meta_size, meta_buf);
+    if (unpacked_meta) {
+        printf("  - Unpacked verification - channels: %d, size: %d, dims: %dx%d\n",
+               unpacked_meta->channels, unpacked_meta->size, unpacked_meta->width, unpacked_meta->height);
+        metadata__free_unpacked(unpacked_meta, NULL);
+    } else {
+        printf("  - ERROR: Could not unpack metadata for verification!\n");
+    }
+
     size_t block_size = data_size + meta_size + sizeof(uint32_t);
     if (result->batch_size == 0)
     {
