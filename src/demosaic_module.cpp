@@ -40,7 +40,7 @@ void module()
         cv::cvtColor(rawImage, demosaicedImage, cv::COLOR_BayerRG2BGR);
 
         /* Apply vertical flip to match camera orientation */
-        cv::Mat flippedImage;
+        cv::Mat finalImage;
         cv::flip(demosaicedImage, finalImage, 0);  // 0 means vertical flip
         
         /* Calculate output image size */
@@ -87,7 +87,7 @@ void module()
 /* END MODULE IMPLEMENTATION */
 
 /* Main function of module (NO NEED TO MODIFY) */
-ImageBatch run(ImageBatch *input_batch, ModuleParameterList *module_parameter_list, int *ipc_error_pipe)
+extern "C" ImageBatch run(ImageBatch *input_batch, ModuleParameterList *module_parameter_list, int *ipc_error_pipe)
 {
     ImageBatch result_batch;
     result = &result_batch;
