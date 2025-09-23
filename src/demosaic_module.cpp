@@ -7,6 +7,13 @@
 enum ERROR_CODE {
     MALLOC_ERR = 1,
     OPENCV_ERR = 2,
+    OPENCV_DEM_ERR = 3,
+    OPNECV_MAT_ERR = 4,
+    OPENCV_ROT_ERR = 5,
+    OPENCV_NORM_ERR = 6,
+    INVALID_INPUT = 7,
+    INVALID_INPUT_VALUES = 8,
+    
 };
 
 /* START MODULE IMPLEMENTATION */
@@ -14,6 +21,10 @@ void module()
 {
     /* Get number of images in input batch */
     int num_images = get_input_num_images();
+
+    if (num_images <= 0){
+        signal_error_and_exit(INVALID_INPUT);
+    }
     
     /* Process each image in the batch */
     for (int i = 0; i < num_images; ++i)
@@ -27,6 +38,10 @@ void module()
         int bits_pixel = input_meta->bits_pixel;
         char *camera = input_meta->camera;
         int obid = input_meta->obid;
+
+        if (height <= 0 || width <= 0 || channels <= 0){
+            signal_error_and_exit(INVALID_INPUT_VALUES);
+        }
         
         /* Get input image data */
         unsigned char *input_image_data;
@@ -34,10 +49,18 @@ void module()
         
         /* Create OpenCV Mat for raw image (12-bit data in 16-bit container) */
         cv::Mat rawImage(height, width, CV_16UC1, (uint16_t*)input_image_data);
+
+        if (rawImage.empty() || rawImage.data == NULL){
+            signal_error_and_exit(OPENCV_ERR);
+        }
         
         /* Perform demosaicing with GRBG pattern */
         cv::Mat demosaicedImage;
         cv::cvtColor(rawImage, demosaicedImage, cv::COLOR_BayerRG2BGR);
+
+        if (demosaicedImage.empty() || demosaicedImage.data == NULL){
+            signal_error_and_exit(OPENCV_DEM_ERR);
+        }
 
         /* Apply vertical flip to match camera orientation */
         //cv::Mat finalImage;
@@ -48,14 +71,26 @@ void module()
         double scale = 1.0;
 
         cv::Mat rotation_matrix = cv::getRotationMatrix2D(center, angle, scale);
+
+        if (rotation_matrix.empty()){
+            signal_error_and_exit(OPNECV_MAT_ERR);
+        }
         cv::Mat rotated_image;
         cv::warpAffine(demosaicedImage, rotated_image, rotation_matrix, cv::Size(width, height));
 
-        cv::Mat normalizedImage;
-        cv::normalize(rotated_image, normalizedImage, 0, 255, cv::NORM_MINMAX);
+        if (rotated_image.empty() || rotated_image.data == NULL){
+            signal_error_and_exit(OPENCV_ROT_ERR);
+        }
+
+        cv::Mat normalized_Image;
+        cv::normalize(rotated_image, normalized_Image, 0, 255, cv::NORM_MINMAX);
+
+        if (normalized_Image.empty() || normalized_Image.data == NULL){
+            signal_error_and_exit(OPENCV_NORM_ERR);
+        }
 
         /* Calculate output image size */
-        size_t output_size = normalizedImage.total() * normalizedImage.elemSize();
+        size_t output_size = normalized_Image.total() * normalized_Image.elemSize();
         
         /* Allocate memory for output image data */
         unsigned char *output_image_data = (unsigned char *)malloc(output_size);
@@ -67,7 +102,7 @@ void module()
         }
         
         /* Copy demosaiced data to output buffer */
-        memcpy(output_image_data, normalizedImage.data, output_size);
+        memcpy(output_image_data, normalized_Image.data, output_size);
         
         /* Create output image metadata */
         Metadata new_meta = METADATA__INIT;
