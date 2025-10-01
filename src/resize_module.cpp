@@ -7,8 +7,10 @@
 enum ERROR_CODE {
     MALLOC_ERR = 1,
     OPENCV_ERR = 2,
+    OPENCV_RES_ERR = 3,
     INVALID_INPUT = 7,
     INVALID_INPUT_VALUES = 8,
+    INVALID_NEW_INPUT_VALUES = 9,
 
 };
 
@@ -43,7 +45,7 @@ void module()
         size_t size = get_image_data(i, &input_image_data);
 
         // This should be configured in module yaml
-        int target_size = 126;
+        int target_size = 128;
     
         // Calculate scale to fit within target_size while preserving aspect ratio
         double scale = std::min(static_cast<double>(target_size) / width, 
@@ -51,6 +53,10 @@ void module()
     
         int new_width = static_cast<int>(width * scale);
         int new_height = static_cast<int>(height * scale);
+
+        if (new_height <= 0 || new_width <= 0){
+            signal_error_and_exit(INVALID_NEW_INPUT_VALUES);
+        }
 
         /* Create OpenCV Mat for raw image (12-bit data in 16-bit container) */
         cv::Mat rawImage(height, width, CV_16UC1, (uint16_t*)input_image_data);
@@ -61,6 +67,10 @@ void module()
 
         cv::Mat thumbnailImage;
         cv::resize(rawImage, thumbnailImage, cv::Size(new_width, new_height), 0, 0, cv::INTER_CUBIC);
+
+        if (thumbnailImage.empty() || thumbnailImage.data == NULL){
+            signal_error_and_exit(OPENCV_RES_ERR);
+        }
 
         /* Calculate output image size */
         size_t output_size = thumbnailImage.total() * thumbnailImage.elemSize();
@@ -85,7 +95,7 @@ void module()
         
         /* Add custom metadata for demosaicing info */
         add_custom_metadata_string(&new_meta, "processing", "demosaiced");
-        add_custom_metadata_string(&new_meta,"resized", "64x64");
+        add_custom_metadata_int(&new_meta,"resized", target_size);
 
         
         /* Append the processed image to the result batch */
