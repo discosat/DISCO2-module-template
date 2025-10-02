@@ -58,6 +58,7 @@ void module()
             signal_error_and_exit(INVALID_NEW_INPUT_VALUES);
         }
 
+        printf("[DEBUG]bits per pixel", bits_pixel);
         cv::Mat rawImage;
         if(bits_pixel == 8){
             if(channels == 1){
@@ -68,7 +69,7 @@ void module()
                 signal_error_and_exit(INVALID_INPUT_VALUES);
             }
         } else if (bits_pixel > 8){
-            rawImage = cv::Mat(height, width, CV_16FC1, (uint16_t*)input_image_data);
+            rawImage = cv::Mat(height, width, CV_16UC1, (uint16_t*)input_image_data);
         } else {
             signal_error_and_exit(INVALID_INPUT_VALUES);
         } 
@@ -103,8 +104,8 @@ void module()
         /* Create output image metadata */
         Metadata new_meta = METADATA__INIT;
         new_meta.size = output_size;
-        new_meta.width = width;
-        new_meta.height = height;
+        new_meta.width = new_width;
+        new_meta.height = new_height;
         
         /* Add custom metadata for demosaicing info */
         add_custom_metadata_int(&new_meta,"resized", target_size);
