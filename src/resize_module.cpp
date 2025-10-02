@@ -59,9 +59,9 @@ void module()
         }
 
         printf("[DEBUG]bits per pixel: %d\n", bits_pixel);
-	printf("[DEBUG]channels; %d\n", channels);
-	bits_pixel =16;
-	printf("[DEBUG]bits per pixel: %d\n", bits_pixel);
+	    printf("[DEBUG]channels; %d\n", channels);
+	    bits_pixel =16;
+	    printf("[DEBUG]bits per pixel: %d\n", bits_pixel);
 
         cv::Mat rawImage;
         if(bits_pixel == 8){
@@ -110,6 +110,11 @@ void module()
         new_meta.size = output_size;
         new_meta.width = new_width;
         new_meta.height = new_height;
+        new_meta.channels = thumbnailImage.channels();
+        new_meta.bits_pixel = input_meta->bits_pixel;
+        new_meta.timestamp = input_meta->timestamp;
+        new_meta.obid = input_meta->obid;
+        new_meta.camera = input_meta->camera;
         
         /* Add custom metadata for demosaicing info */
         add_custom_metadata_int(&new_meta,"resized", target_size);
