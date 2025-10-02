@@ -58,7 +58,11 @@ void module()
             signal_error_and_exit(INVALID_NEW_INPUT_VALUES);
         }
 
-        printf("[DEBUG]bits per pixel", bits_pixel);
+        printf("[DEBUG]bits per pixel: %d\n", bits_pixel);
+	printf("[DEBUG]channels; %d\n", channels);
+	bits_pixel =16;
+	printf("[DEBUG]bits per pixel: %d\n", bits_pixel);
+
         cv::Mat rawImage;
         if(bits_pixel == 8){
             if(channels == 1){
