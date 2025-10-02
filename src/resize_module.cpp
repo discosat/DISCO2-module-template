@@ -58,8 +58,21 @@ void module()
             signal_error_and_exit(INVALID_NEW_INPUT_VALUES);
         }
 
-        /* Create OpenCV Mat for raw image (12-bit data in 16-bit container) */
-        cv::Mat rawImage(height, width, CV_16UC1, (uint16_t*)input_image_data);
+        cv::Mat rawImage;
+        if(bits_pixel == 8){
+            if(channels == 1){
+                rawImage = cv::Mat(height, width, CV_8UC1, (uint8_t*)input_image_data);
+            } else if (channels == 3) {
+                rawImage = cv::Mat(height, width, CV_8UC3, (uint8_t*)input_image_data);
+            } else {
+                signal_error_and_exit(INVALID_INPUT_VALUES);
+            }
+        } else if (bits_pixel > 8){
+            rawImage = cv::Mat(height, width, CV_16FC1, (uint16_t*)input_image_data);
+        } else {
+            signal_error_and_exit(INVALID_INPUT_VALUES);
+        } 
+
         
         if (rawImage.empty() || rawImage.data == NULL){
             signal_error_and_exit(OPENCV_ERR);
@@ -94,7 +107,6 @@ void module()
         new_meta.height = height;
         
         /* Add custom metadata for demosaicing info */
-        add_custom_metadata_string(&new_meta, "processing", "demosaiced");
         add_custom_metadata_int(&new_meta,"resized", target_size);
 
         
