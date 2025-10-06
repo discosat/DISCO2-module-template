@@ -111,7 +111,7 @@ void module()
         new_meta.height = height;
         new_meta.channels = 3; // BGR output
         new_meta.timestamp = timestamp;
-        new_meta.bits_pixel = 8;
+        new_meta.bits_pixel = 16;
         new_meta.camera = camera;
         new_meta.obid = obid;
         
