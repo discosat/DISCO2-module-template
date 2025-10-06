@@ -60,24 +60,15 @@ void module()
 
         printf("[DEBUG]bits per pixel: %d\n", bits_pixel);
 	    printf("[DEBUG]channels; %d\n", channels);
-	    bits_pixel =16;
-	    printf("[DEBUG]bits per pixel: %d\n", bits_pixel);
 
         cv::Mat rawImage;
-        if(bits_pixel == 8){
-            if(channels == 1){
-                rawImage = cv::Mat(height, width, CV_8UC1, (uint8_t*)input_image_data);
-            } else if (channels == 3) {
-                rawImage = cv::Mat(height, width, CV_8UC3, (uint8_t*)input_image_data);
-            } else {
-                signal_error_and_exit(INVALID_INPUT_VALUES);
-            }
-        } else if (bits_pixel > 8){
+        if(channels == 1){
             rawImage = cv::Mat(height, width, CV_16UC1, (uint16_t*)input_image_data);
+        } else if (channels == 3) {
+            rawImage = cv::Mat(height, width, CV_16UC3, (uint16_t*)input_image_data);
         } else {
             signal_error_and_exit(INVALID_INPUT_VALUES);
-        } 
-
+            }
         
         if (rawImage.empty() || rawImage.data == NULL){
             signal_error_and_exit(OPENCV_ERR);
@@ -110,7 +101,7 @@ void module()
         new_meta.size = output_size;
         new_meta.width = new_width;
         new_meta.height = new_height;
-        new_meta.channels = thumbnailImage.channels();
+        new_meta.channels = channels;
         new_meta.bits_pixel = input_meta->bits_pixel;
         new_meta.timestamp = input_meta->timestamp;
         new_meta.obid = input_meta->obid;
