@@ -16,7 +16,7 @@ Rename the project inside the `meson.build` file, by editing the `project_name` 
 
 ## Writing the Module
 
-To write the module, you must edit the `module_template.c` or `module_template.cpp` file (remember to change the build source file to the `.cpp` version in `meson.build` if using C++). These files give examples of how to utilize the `ImageBatch` struct and how parameters can be accessed. 
+To write the module, you must edit the `module_template.c` or `module_template.cpp` file (remember to change the `active_module` variable in `meson.build`). These files give examples of how to utilize the `ImageBatch` struct and how parameters can be accessed. 
 
 ### ImageBatch Struct and Utilities
 
@@ -27,7 +27,7 @@ typedef struct ImageBatch {
     long mtype;          /* message type to read from the message queue */
     int num_images;      /* amount of images */
     int batch_size;      /* size of the image batch */
-    int shm_key;         /* key to shared memory segment of image data */
+    int shm_key;         /* key to shared memory segmentt of image data */ -- this is different???
     int pipeline_id;     /* id of pipeline to utilize for processing */
     unsigned char *data; /* address to image data (in shared memory) */
 } ImageBatch;
@@ -57,6 +57,7 @@ In order to read and manipulate image metadata (such as width, height or channel
 ```c
 struct Metadata
 {
+  -- this is different???
   int32_t size;
   int32_t height;
   int32_t width;
@@ -193,3 +194,64 @@ In order to test and debug the module, you must first compile the module as prev
 ```
 Remember to dump a .png image in the workspace root called `input.png`. The test executable can be called with an integer argument to specify how many instances of the image should be added to the `ImageBatch`.
 If the module expects custom parameters, these must be specified in the `config.yaml` file as explained in the [Providing Custom Parameters](#providing-custom-parameters) section.
+
+## Must have modules
+
+### Demosaic module
+- demosaicing BayerRG2BGR
+- rotation 180 degrees
+- normalization
+- new meta data added (demosaiced, channels, orientation)
+- no parameters necessary
+
+#### Error Signaling
+
+|Error Code | Description                        |
+| --------- | ---------------------------------- |
+| 701       | Memory Error: Malloc               |
+| 702       | OpenCV Error: Raw image empty      |
+| 703       | OpenCV Error: Demosaic error       |
+| 704       | OpenCV Error: Rotation matrix error|
+| 705       | OpenCV Error: Rotation error       |
+| 706       | OpenCV Error: Normalization error  |
+| 707       | Input Error: Number of images error|
+| 708       | Input Error: Invalid input values  |
+
+### Resize module
+- target size 128
+- scales for the actual size of image taken by the camera
+- uses INER_CUBIC for resizing (should this be configurable?)
+- no parameters necessary as of now
+
+#### Error signaling
+|Error Code | Description                           |
+| --------- | ------------------------------------- |
+| 701       | Memory Error: Malloc                  |
+| 702       | OpenCV Error: Raw image empty         |
+| 703       | OpenCV Error: Resizing error          |
+| 707       | Input Error: Number of images error   |
+| 708       | Input Error: Invalid input values     |
+| 709       | Input Error: Invalid new input values |
+
+### JPEGXL module
+- need module parameters - effort, resampling, distance
+- Effort: Sets encoder effort/speed level without affecting decoding speed. Valid values are, from faster to slower speed: 1:lightning 2:thunder 3:falcon 4:cheetah 5:hare 6:wombat 7:squirrel 8:kitten 9:tortoise 10:glacier. Default: squirrel (7). 
+- Resampling: Sets resampling option. If enabled, the image is downsampled before compression, and upsampled to original size in the decoder. Integer option, use -1 for the default behavior (resampling only applied for low quality), 1 for no downsampling (1x1), 2 for 2x2 downsampling, 4 for 4x4 downsampling, 8 for 8x8 downsampling. 
+- Distance: Sets the distance level for lossy compression: target max butteraugli distance, lower = higher quality. Range: 0 .. 25. 0.0 = mathematically lossless (however, use JxlEncoderSetFrameLossless instead to use true lossless, as setting distance to 0 alone is not the only requirement). 1.0 = visually lossless. Recommended range: 0.5 .. 3.0. Default value: 1.0.
+https://libjxl.readthedocs.io/en/latest/api_encoder.html#_CPPv4N24JxlEncoderFrameSettingId28JXL_ENC_FRAME_SETTING_EFFORTE
+
+#### Error signaling
+|Error Code | Description                           |
+| --------- | ------------------------------------- |
+| 701       | Memory Error: Malloc                  |
+| 702       | JXL Error: Encoder create error       |
+| 703       | JXL Error: Encoder set options error  |
+| 704       | JXL Error: Encoder set lossless error |
+| 705       | JXL Error: Encoder set distance error |
+| 706       | JXL Error: Encoder set info error     |
+| 707       | JXL Error: Encoder add image error    |
+| 708       | JXL Error: Encoder process error      |
+| 709       | Input Error: Invalid new input values |
+
+### Extra branches
+We have multiple branches with different modules that can be used as is or as inspiration - always test before implementing anything.
