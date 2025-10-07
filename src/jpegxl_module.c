@@ -36,6 +36,7 @@ void module()
         int timestamp = input_meta->timestamp;
         int bits_pixel = input_meta->bits_pixel;
         char *camera = input_meta->camera;
+        int obid = input_meta->obid;
 
         unsigned char *input_image_data;
         get_image_data(i, &input_image_data);
