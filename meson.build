@@ -1,5 +1,5 @@
-project('demosaic', 'c', 'cpp')
-project_name = 'demosaic'
+project('jpegxl', 'c', 'cpp')
+project_name = 'jpegxl'
 
 # Compiler and linker flags
 cflags = ['-Wall', '-g', '-O0']
@@ -9,7 +9,10 @@ cppflags = ['-Wall', '-std=c++17', '-g', '-O0']
 cc = meson.get_compiler('c')
 cpp = meson.get_compiler('cpp')
 proto_c_dep = cc.find_library('protobuf-c', required: false)
-opencv_dep = dependency('opencv4', required: true) # You can change to opencv if opencv4 fails
+opencv_dep = dependency('opencv4', required: true)
+jxl_dep = dependency('libjxl', required: true)
+jxl_threads_dep = dependency('libjxl_threads', required: true)
+
 
 # Source files
 c_sources = [
@@ -23,7 +26,7 @@ c_sources = [
 ]
 
 # Change this to switch the active module!
-active_module = 'src/demosaic_module.cpp' # <-- Change this to switch modules
+active_module = 'src/jpegxl_module.c' # <-- Change this to switch modules
 
 # Build sources array similar to reference
 sources = c_sources + [active_module]
@@ -35,7 +38,7 @@ dirs = include_directories(
 )
 
 # Dependencies array
-deps = [proto_c_dep, opencv_dep]
+deps = [proto_c_dep, opencv_dep, jxl_dep, jxl_threads_dep]
 
 # Shared library (SO)
 shared_library(project_name, sources,
