@@ -13,6 +13,7 @@ enum ERROR_CODE {
     OPENCV_NORM_ERR = 6,
     INVALID_INPUT = 7,
     INVALID_INPUT_VALUES = 8,
+    INVALID_NORMALIZATION_VALUE = 9,
     
 };
 
@@ -22,10 +23,16 @@ void module()
     /* Get number of images in input batch */
     int num_images = get_input_num_images();
 
-    if (num_images <= 0){
+        if (num_images <= 0){
         signal_error_and_exit(INVALID_INPUT);
     }
-    
+
+    int normalizitation_value = get_param_int("normalization_value");
+
+    if (normalizitation_value != 255 && normalizitation_value != 65535){
+        signal_error_and_exit(INVALID_NORMALIZATION_VALUE);
+    }
+
     /* Process each image in the batch */
     for (int i = 0; i < num_images; ++i)
     {
@@ -48,7 +55,7 @@ void module()
         size_t input_size = get_image_data(i, &input_image_data);
         
         /* Create OpenCV Mat for raw image (12-bit data in 16-bit container) */
-        cv::Mat rawImage(height, width, CV_16UC1, (uint16_t*)input_image_data);
+        cv::Mat rawImage(height, width, CV_16UC1, (uint16_t*)input_image_data); 
 
         if (rawImage.empty() || rawImage.data == NULL){
             signal_error_and_exit(OPENCV_ERR);
@@ -83,7 +90,7 @@ void module()
         }
 
         cv::Mat normalized_Image;
-        cv::normalize(rotated_image, normalized_Image, 0, 255, cv::NORM_MINMAX);
+        cv::normalize(rotated_image, normalized_Image, 0, normalizitation_value, cv::NORM_MINMAX);
 
         if (normalized_Image.empty() || normalized_Image.data == NULL){
             signal_error_and_exit(OPENCV_NORM_ERR);
@@ -110,10 +117,17 @@ void module()
         new_meta.width = width;
         new_meta.height = height;
         new_meta.channels = 3; // BGR output
-        new_meta.timestamp = timestamp;
-        new_meta.bits_pixel = 16;
-        new_meta.camera = camera;
-        new_meta.obid = obid;
+        new_meta.timestamp = input_meta->timestamp;
+        if (normalizitation_value = 255){
+            new_meta.bits_pixel = 8; //after normalizing 8-bit
+        } else if(normalizitation_value = 65535){
+            new_meta.bits_pixel = 16;
+        } else {
+            signal_error_and_exit(INVALID_NORMALIZATION_VALUE);
+        }
+        
+        new_meta.camera = input_meta->camera;
+        new_meta.obid = input_meta->obid;
         
         /* Add custom metadata for demosaicing info */
         add_custom_metadata_string(&new_meta, "processing", "demosaiced");
