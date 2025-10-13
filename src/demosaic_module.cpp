@@ -27,9 +27,9 @@ void module()
         signal_error_and_exit(INVALID_INPUT);
     }
 
-    int normalizitation_value = get_param_int("normalization_value");
+    int normalization_value = get_param_int("normalization_value");
 
-    if (normalizitation_value != 255 && normalizitation_value != 65535){
+    if (normalization_value != 255 && normalization_value != 65535){
         signal_error_and_exit(INVALID_NORMALIZATION_VALUE);
     }
 
@@ -90,7 +90,7 @@ void module()
         }
 
         cv::Mat normalized_Image;
-        cv::normalize(rotated_image, normalized_Image, 0, normalizitation_value, cv::NORM_MINMAX);
+        cv::normalize(rotated_image, normalized_Image, 0, normalization_value, cv::NORM_MINMAX);
 
         if (normalized_Image.empty() || normalized_Image.data == NULL){
             signal_error_and_exit(OPENCV_NORM_ERR);
@@ -118,10 +118,10 @@ void module()
         new_meta.height = height;
         new_meta.channels = 3; // BGR output
         new_meta.timestamp = input_meta->timestamp;
-        if (normalizitation_value = 255){
+        if (normalization_value == 255){
             new_meta.bits_pixel = 8; //after normalizing 8-bit
-        } else if(normalizitation_value = 65535){
-            new_meta.bits_pixel = 16;
+        } else if(normalization_value == 65535){
+            new_meta.bits_pixel = 17;
         } else {
             signal_error_and_exit(INVALID_NORMALIZATION_VALUE);
         }
