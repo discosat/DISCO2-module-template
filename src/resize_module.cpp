@@ -11,7 +11,7 @@ enum ERROR_CODE {
     INVALID_INPUT = 7,
     INVALID_INPUT_VALUES = 8,
     INVALID_NEW_INPUT_VALUES = 9,
-
+    INVALID_TARGET_SIZE = 10,
 };
 
 /* START MODULE IMPLEMENTATION */
@@ -22,6 +22,13 @@ void module()
 
     if (num_images <= 0){
         signal_error_and_exit(INVALID_INPUT);
+    }
+
+    int target_size = get_param_int("targer_size");
+    bool save_og = get_param_bool("save_og_image");
+
+    if (target_size <= 0){
+        signal_error_and_exit(INVALID_TARGET_SIZE);
     }
 
     /* Example code for iterating a pixel value at a time */
@@ -44,8 +51,6 @@ void module()
         unsigned char *input_image_data;
         size_t size = get_image_data(i, &input_image_data);
 
-        // This should be configured in module yaml
-        int target_size = 128;
     
         // Calculate scale to fit within target_size while preserving aspect ratio
         double scale = std::min(static_cast<double>(target_size) / width, 
@@ -58,20 +63,56 @@ void module()
             signal_error_and_exit(INVALID_NEW_INPUT_VALUES);
         }
 
-        printf("[DEBUG]bits per pixel: %d\n", bits_pixel);
-	    printf("[DEBUG]channels; %d\n", channels);
-
         cv::Mat rawImage;
-        if(channels == 1){
-            rawImage = cv::Mat(height, width, CV_16UC1, (uint16_t*)input_image_data);
-        } else if (channels == 3) {
-            rawImage = cv::Mat(height, width, CV_16UC3, (uint16_t*)input_image_data);
-        } else {
-            signal_error_and_exit(INVALID_INPUT_VALUES);
+
+        if (channels == 1) {
+            if (bits_pixel == 8) {
+                rawImage = cv::Mat(height, width, CV_8UC1, input_image_data);
+            } else if (bits_pixel == 16) {
+                rawImage = cv::Mat(height, width, CV_16UC1, input_image_data);
+            } else {
+                signal_error_and_exit(INVALID_INPUT_VALUES);
             }
-        
-        if (rawImage.empty() || rawImage.data == NULL){
-            signal_error_and_exit(OPENCV_ERR);
+            } else if (channels == 3) {
+            if (bits_pixel == 8) {
+                rawImage = cv::Mat(height, width, CV_8UC3, input_image_data);
+            } else if (bits_pixel == 16) {
+                rawImage = cv::Mat(height, width, CV_16UC3, input_image_data);
+            } else {
+                signal_error_and_exit(INVALID_INPUT_VALUES);
+            }
+            } else {
+                signal_error_and_exit(INVALID_INPUT_VALUES);
+            }
+
+            if (rawImage.empty() || rawImage.data == NULL) {
+                signal_error_and_exit(OPENCV_ERR);
+            }
+
+        if (save_og)
+        {
+            size_t og_size = rawImage.total() * rawImage.elemSize();
+            unsigned char *og_copy = (unsigned char *)malloc(og_size);
+        if (og_copy == NULL)
+            signal_error_and_exit(MALLOC_ERR);
+
+            memcpy(og_copy, rawImage.data, og_size);
+
+            Metadata og_meta = METADATA__INIT;
+            og_meta.size = og_size;
+            og_meta.width = width;
+            og_meta.height = height;
+            og_meta.channels = channels;
+            og_meta.bits_pixel = bits_pixel;
+            og_meta.timestamp = input_meta->timestamp;
+            og_meta.obid = input_meta->obid;
+            og_meta.camera = input_meta->camera;
+
+            add_custom_metadata_int(&og_meta, "saved_original", 1);
+
+            append_result_image(og_copy, og_size, &og_meta);
+
+            free(og_copy);
         }
 
         cv::Mat thumbnailImage;
@@ -101,7 +142,7 @@ void module()
         new_meta.size = output_size;
         new_meta.width = new_width;
         new_meta.height = new_height;
-        new_meta.channels = channels;
+        new_meta.channels = input_meta->channels;
         new_meta.bits_pixel = input_meta->bits_pixel;
         new_meta.timestamp = input_meta->timestamp;
         new_meta.obid = input_meta->obid;
