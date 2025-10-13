@@ -33,8 +33,6 @@ void module()
         signal_error_and_exit(INVALID_NORMALIZATION_VALUE);
     }
 
-    printf("Normalization value: %d\n", normalization_value);
-
     /* Process each image in the batch */
     for (int i = 0; i < num_images; ++i)
     {
@@ -51,8 +49,6 @@ void module()
         if (height <= 0 || width <= 0 || channels <= 0){
             signal_error_and_exit(INVALID_INPUT_VALUES);
         }
-
-        printf("[DEBUG] bits_pixel: %d\n", bits_pixel);
         
         /* Get input image data */
         unsigned char *input_image_data;
@@ -102,8 +98,6 @@ void module()
 
         /* Calculate output image size */
         size_t output_size = normalized_Image.total() * normalized_Image.elemSize();
-
-        printf("[DEBUG] size output: %zu\n", output_size);
         
         /* Allocate memory for output image data */
         unsigned char *output_image_data = (unsigned char *)malloc(output_size);
