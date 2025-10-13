@@ -33,6 +33,8 @@ void module()
         signal_error_and_exit(INVALID_NORMALIZATION_VALUE);
     }
 
+    printf("Normalization value: %d\n", normalization_value);
+
     /* Process each image in the batch */
     for (int i = 0; i < num_images; ++i)
     {
@@ -49,6 +51,8 @@ void module()
         if (height <= 0 || width <= 0 || channels <= 0){
             signal_error_and_exit(INVALID_INPUT_VALUES);
         }
+
+        printf("[DEBUG] bits_pixel: %d\n", bits_pixel);
         
         /* Get input image data */
         unsigned char *input_image_data;
@@ -98,6 +102,8 @@ void module()
 
         /* Calculate output image size */
         size_t output_size = normalized_Image.total() * normalized_Image.elemSize();
+
+        printf("[DEBUG] size output: %zu\n", output_size);
         
         /* Allocate memory for output image data */
         unsigned char *output_image_data = (unsigned char *)malloc(output_size);
@@ -110,6 +116,16 @@ void module()
         
         /* Copy demosaiced data to output buffer */
         memcpy(output_image_data, normalized_Image.data, output_size);
+
+        int output_bits_pixel;
+
+        if (normalization_value == 255) {
+            output_bits_pixel = 8;   // 8-bit normalization
+        } else if (normalization_value == 65535) {
+            output_bits_pixel = 16;  // 16-bit normalization
+        } else {
+            signal_error_and_exit(INVALID_NORMALIZATION_VALUE);
+        }
         
         /* Create output image metadata */
         Metadata new_meta = METADATA__INIT;
@@ -118,14 +134,7 @@ void module()
         new_meta.height = height;
         new_meta.channels = 3; // BGR output
         new_meta.timestamp = input_meta->timestamp;
-        if (normalization_value == 255){
-            new_meta.bits_pixel = 8; //after normalizing 8-bit
-        } else if(normalization_value == 65535){
-            new_meta.bits_pixel = 17;
-        } else {
-            signal_error_and_exit(INVALID_NORMALIZATION_VALUE);
-        }
-        
+        new_meta.bits_pixel = output_bits_pixel;
         new_meta.camera = input_meta->camera;
         new_meta.obid = input_meta->obid;
         
