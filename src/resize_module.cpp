@@ -24,12 +24,14 @@ void module()
         signal_error_and_exit(INVALID_INPUT);
     }
 
-    int target_size = get_param_int("targer_size");
-    //bool save_og = get_param_bool("save_og_image");
+    int target_size = get_param_int("target_size");
+    bool save_og = get_param_bool("save_og_image");
 
     if (target_size <= 0){
         signal_error_and_exit(INVALID_TARGET_SIZE);
     }
+
+    printf("[DEBUG-resizer] target size: %d\n", target_size);
 
     /* Example code for iterating a pixel value at a time */
     for (int i = 0; i < num_images; ++i)
@@ -68,7 +70,7 @@ void module()
         if (channels == 1) {
             if (bits_pixel == 8) {
                 rawImage = cv::Mat(height, width, CV_8UC1, input_image_data);
-            } else if (bits_pixel == 16) {
+            } else if (bits_pixel == 16) { 
                 rawImage = cv::Mat(height, width, CV_16UC1, input_image_data);
             } else {
                 signal_error_and_exit(INVALID_INPUT_VALUES);
@@ -89,7 +91,7 @@ void module()
                 signal_error_and_exit(OPENCV_ERR);
             }
 
-        /*if (save_og)
+        if (save_og)
         {
             size_t og_size = rawImage.total() * rawImage.elemSize();
             unsigned char *og_copy = (unsigned char *)malloc(og_size);
@@ -113,7 +115,7 @@ void module()
             append_result_image(og_copy, og_size, &og_meta);
 
             free(og_copy);
-        }*/
+        }
 
         cv::Mat thumbnailImage;
         cv::resize(rawImage, thumbnailImage, cv::Size(new_width, new_height), 0, 0, cv::INTER_CUBIC);
