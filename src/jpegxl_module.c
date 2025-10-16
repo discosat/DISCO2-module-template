@@ -12,6 +12,7 @@ enum ERROR_CODE {
     JXL_ENC_SET_INFO = 6,
     JXL_ENC_ADD_IMAGE = 7,
     JXL_ENC_PROCESS = 8,
+    META_BITSPIXEL = 9,
 };
 
 /* START MODULE IMPLEMENTATION */
@@ -68,9 +69,19 @@ void module()
         basic_info.num_color_channels = channels > 3 ? 3 : channels;
         basic_info.num_extra_channels = channels - basic_info.num_color_channels;
         basic_info.bits_per_sample = bits_pixel;
-        basic_info.alpha_bits = basic_info.num_extra_channels > 0 ? bits_pixel : 0;
+        basic_info.alpha_bits = basic_info.num_extra_channels > 0 ? bits_pixel : 0;       
 
-        JxlPixelFormat format = {channels, JXL_TYPE_UINT8, JXL_NATIVE_ENDIAN, 0}; 
+        int jxl_type;
+        if (bits_pixel == 16){
+            jxl_type = JXL_TYPE_UINT16;
+
+        } else if (bits_pixel == 8){
+            jxl_type = JXL_TYPE_UINT8;
+        }else {
+            signal_error_and_exit(META_BITSPIXEL);
+        }
+
+        JxlPixelFormat format = {channels, jxl_type, JXL_NATIVE_ENDIAN, 0}; 
 
         if (JxlEncoderSetBasicInfo(encoder, &basic_info))
             signal_error_and_exit(JXL_ENC_SET_INFO);
