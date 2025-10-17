@@ -95,6 +95,15 @@ Metadata *get_metadata(int index);
 void unpack_metadata();
 
 /**
+ * Copy metadata items from old Metadata objects to new Metadata objects.
+ *
+ * @param new_metadata Pointer to new metadata object
+ * @param name Pointer to the input_metadata object
+ * 
+ */
+void copy_metadata_items(Metadata *new_metadata, Metadata *input_metadata);
+
+/**
  * Add custom key-value pair to image metadata, of type bool
  *
  * @param data Metadata that is to be added to
