@@ -84,54 +84,6 @@ void unpack_metadata()
     }
 }
 
-void copy_metadata_items(Metadata *new_metadata, Metadata *input_metadata) {
-  if (input_metadata == NULL || input_metadata->n_items == 0) {
-    return;
-  }
-
-  for (size_t i = 0; i < input_metadata->n_items; i++) {
-    MetadataItem *src_item = input_metadata->items[i];
-    if (src_item == NULL || src_item->key == NULL) {
-      continue;
-    }
-
-    MetadataItem *dst_item = allocate_metadata_item(new_metadata, src_item->key);
-    if (dst_item == NULL) {
-      signal_error_and_exit(100);
-    }
-
-    dst_item->value_case = src_item->value_case;
-
-    switch (src_item->value_case) {
-    case METADATA_ITEM__VALUE_BOOL_VALUE:
-      dst_item->bool_value = src_item->bool_value;
-      break;
-
-    case METADATA_ITEM__VALUE_INT_VALUE:
-      dst_item->int_value = src_item->int_value;
-      break;
-
-    case METADATA_ITEM__VALUE_FLOAT_VALUE:
-      dst_item->float_value = src_item->float_value;
-      break;
-
-    case METADATA_ITEM__VALUE_STRING_VALUE:
-      if (src_item->string_value) {
-        dst_item->string_value = strdup(src_item->string_value);
-        if (dst_item->string_value == NULL) {
-          signal_error_and_exit(100);
-        }
-      } else {
-        dst_item->string_value = NULL;
-      }
-      break;
-
-    default:
-      break;
-    }
-  }
-}
-
 static MetadataItem *get_item(Metadata *data, const char *key) {
     MetadataItem *found_item = NULL;
     for (size_t i = 0; i < data->n_items; i++)

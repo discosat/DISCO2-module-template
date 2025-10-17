@@ -132,7 +132,7 @@ void module()
         new_meta.camera = input_meta->camera;
         new_meta.obid = input_meta->obid;
         
-        copy_metadata_items(Metadata *new_meta, Metadata *input_meta);
+        copy_metadata_items(&new_meta, input_meta);
 
         /* Add custom metadata for demosaicing info */
         add_custom_metadata_string(&new_meta, "processing", "demosaiced");
