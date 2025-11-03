@@ -26,7 +26,6 @@ void module()
     int resampling = get_param_int("resampling");
     float distance = get_param_float("distance");
     int lossless = distance == 0; 
-    bool save_og = get_param_bool("save_og_image");
 
     /* Example code for iterating a pixel value at a time */
     for (int i = 0; i < num_images; ++i)
@@ -43,47 +42,6 @@ void module()
 
         unsigned char *input_image_data;
         get_image_data(i, &input_image_data);
-
-        //beginning of the logic of saving the og image
-
-        if (save_og)
-        {
-            size_t bytes_per_channel = 0;
-            if (bits_pixel == 8)
-                bytes_per_channel = 1;
-            else if (bits_pixel == 16)
-                bytes_per_channel = 2;
-            else
-                signal_error_and_exit(META_BITSPIXEL);
-
-            size_t og_size = (size_t)width * height * channels * bytes_per_channel;
-
-            if (input_image_data == NULL || og_size == 0)
-                signal_error_and_exit(MALLOC_ERR);
-
-            unsigned char *og_copy = (unsigned char *)malloc(og_size);
-            if (og_copy == NULL)
-                signal_error_and_exit(MALLOC_ERR);
-
-            memcpy(og_copy, input_image_data, og_size);
-
-            Metadata og_meta = METADATA__INIT;
-            og_meta.size = og_size;
-            og_meta.width = width;
-            og_meta.height = height;
-            og_meta.channels = channels;
-            og_meta.bits_pixel = bits_pixel;
-            og_meta.timestamp = input_meta->timestamp;
-            og_meta.obid = input_meta->obid;
-            og_meta.camera = input_meta->camera;
-
-            add_custom_metadata_int(&og_meta, "saved_original", 1);
-
-            append_result_image(og_copy, og_size, &og_meta);
-
-            free(og_copy);
-        }
-        //end of the logic of saving the og image
 
         JxlEncoder* encoder = JxlEncoderCreate(NULL); //initialize encoder
 
