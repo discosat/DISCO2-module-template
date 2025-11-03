@@ -198,11 +198,13 @@ If the module expects custom parameters, these must be specified in the `config.
 ## Must have modules
 
 ### Demosaic module
+- need module parameters - normalization value
 - demosaicing BayerRG2BGR
 - rotation 180 degrees
-- normalization
+- normalization for both 8 and 16 bit depends on normalization value
+- 8 bit - 255
+- 16 bit - 65535
 - new meta data added (demosaiced, channels, orientation)
-- no parameters necessary
 
 #### Error Signaling
 
@@ -218,10 +220,12 @@ If the module expects custom parameters, these must be specified in the `config.
 | 708       | Input Error: Invalid input values  |
 
 ### Resize module
-- target size 128
-- scales for the actual size of image taken by the camera
+- need module parameters - target size, save og image
+- target size - int
+- save og imagfe - boolean
+- scales for the actual size of image taken by a camera
 - uses INER_CUBIC for resizing (should this be configurable?)
-- no parameters necessary as of now
+- new metadata added (resized)
 
 #### Error signaling
 |Error Code | Description                           |
@@ -239,6 +243,7 @@ If the module expects custom parameters, these must be specified in the `config.
 - Resampling: Sets resampling option. If enabled, the image is downsampled before compression, and upsampled to original size in the decoder. Integer option, use -1 for the default behavior (resampling only applied for low quality), 1 for no downsampling (1x1), 2 for 2x2 downsampling, 4 for 4x4 downsampling, 8 for 8x8 downsampling. 
 - Distance: Sets the distance level for lossy compression: target max butteraugli distance, lower = higher quality. Range: 0 .. 25. 0.0 = mathematically lossless (however, use JxlEncoderSetFrameLossless instead to use true lossless, as setting distance to 0 alone is not the only requirement). 1.0 = visually lossless. Recommended range: 0.5 .. 3.0. Default value: 1.0.
 https://libjxl.readthedocs.io/en/latest/api_encoder.html#_CPPv4N24JxlEncoderFrameSettingId28JXL_ENC_FRAME_SETTING_EFFORTE
+- new metadata added (enc - jxl)
 
 #### Error signaling
 |Error Code | Description                           |
@@ -252,6 +257,40 @@ https://libjxl.readthedocs.io/en/latest/api_encoder.html#_CPPv4N24JxlEncoderFram
 | 707       | JXL Error: Encoder add image error    |
 | 708       | JXL Error: Encoder process error      |
 | 709       | Input Error: Invalid new input values |
+
+### Distortion module
+- no config file necessary
+- matrices are hard coded:
+- Matrices hard coded for **Telephoto Alvium 1800 U-811c**
+
+| D-matrix 0       | K-matrix 0  | K-matrix 1  | K-matrix 2  |
+|-----------------|-------------|-------------|-------------|
+| -34.3467044     | 255523.216  | 0.0         | 1188.59959  |
+| -0.047078292    | 0.0         | 253926.994  | 1207.97101  |
+| 0.0             | 0.0         | 0.0         | 1.0         |
+| 0.0             |             |             |             |
+| -0.00000401687332 |           |             |             |
+
+- Matrices hard coded for **Wide angle Alvium 1800 U-507c**
+
+| D-matrix           | K-matrix 0   | K-matrix 1   | K-matrix 2   |
+|-------------------|-------------|-------------|-------------|
+| -0.114417559579259 | 2391.95935091607 | 0.0       | 1232.68706589328 |
+| 0.132523919498935  | 0.0             | 2392.35647316894 | 1023.73390593577 |
+| 0.0                | 0.0             | 0.0             | 1.0               |
+| 0.0                |                 |                 |                   |
+| 0.0                |                 |                 |                   |
+
+- new metadata added(distorion corrected)
+
+### Error signaling
+|Error Code | Description                           |
+| --------- | ------------------------------------- |
+| 701       | Memory Error: Malloc                  |
+| 702       | OpenCV Error: Image empty             |
+| 703       | OpenCV Error: Matrices error          |
+| 707       | Input error: Inavlid camera name      |
+
 
 ### Extra branches
 We have multiple branches with different modules that can be used as is or as inspiration - always test before implementing anything.

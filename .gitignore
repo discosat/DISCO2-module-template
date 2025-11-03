@@ -5,3 +5,5 @@
 builddir/*
 testing-dead-pixels
 testing-demosaic
+testing-thumbnail
+meson.build
