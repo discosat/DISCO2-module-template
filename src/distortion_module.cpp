@@ -33,6 +33,7 @@ void module()
         int timestamp = input_meta->timestamp;
         int bits_pixel = input_meta->bits_pixel;
         char *camera = input_meta->camera;
+        int obid = input_meta->obid;
 
         if (!(std::string(camera) == "1800 U-811c" || std::string(camera) == "1800 U-507c")) {
             signal_error_and_exit(INVALID_CAM_VALUES);
@@ -110,6 +111,7 @@ void module()
         new_meta.timestamp = timestamp;
         new_meta.bits_pixel = bits_pixel;
         new_meta.camera = camera;
+        new_meta.obid = input_meta->obid;
 
         add_custom_metadata_bool(&new_meta, "distortion_corrected", true);
 
