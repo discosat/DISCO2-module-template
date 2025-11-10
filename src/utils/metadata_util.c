@@ -214,51 +214,44 @@ Metadata *get_metadata(int index)
     return metadata->metadata[index];
 }
 
-void copy_metadata_items(Metadata *new_metadata, Metadata *input_metadata) {
-  if (input_metadata == NULL || input_metadata->n_items == 0) {
-    return;
-  }
-
-  for (size_t i = 0; i < input_metadata->n_items; i++) {
-    MetadataItem *src_item = input_metadata->items[i];
-    if (src_item == NULL || src_item->key == NULL) {
-      continue;
+int clone_metadata(Metadata *src, Metadata *dst)
+{
+    if (src == NULL || dst == NULL)
+    {
+        return -1;
     }
-
-    MetadataItem *dst_item =
-        allocate_metadata_item(new_metadata, src_item->key);
-    if (dst_item == NULL) {
-      signal_error_and_exit(100);
-    }
-
-    dst_item->value_case = src_item->value_case;
-
-    switch (src_item->value_case) {
-    case METADATA_ITEM__VALUE_BOOL_VALUE:
-      dst_item->bool_value = src_item->bool_value;
-      break;
-
-    case METADATA_ITEM__VALUE_INT_VALUE:
-      dst_item->int_value = src_item->int_value;
-      break;
-
-    case METADATA_ITEM__VALUE_FLOAT_VALUE:
-      dst_item->float_value = src_item->float_value;
-      break;
-
-    case METADATA_ITEM__VALUE_STRING_VALUE:
-      if (src_item->string_value) {
-        dst_item->string_value = strdup(src_item->string_value);
-        if (dst_item->string_value == NULL) {
-          signal_error_and_exit(100);
+ 
+    dst->size = src->size;
+    dst->height = src->height;
+    dst->width = src->width;
+    dst->channels = src->channels;
+    dst->timestamp = src->timestamp;
+    dst->bits_pixel = src->bits_pixel;
+    dst->obid = src->obid;
+    dst->camera = strdup(src->camera);
+ 
+    for (size_t i = 0; i < src->n_items; i++)
+    {
+        char *key = strdup(src->items[i]->key);
+ 
+        switch (src->items[i]->value_case)
+        {
+        case METADATA_ITEM__VALUE_BOOL_VALUE:
+            add_custom_metadata_bool(dst, key, src->items[i]->bool_value);
+            break;
+        case METADATA_ITEM__VALUE_INT_VALUE:
+            add_custom_metadata_int(dst, key, src->items[i]->int_value);
+            break;
+        case METADATA_ITEM__VALUE_FLOAT_VALUE:
+            add_custom_metadata_float(dst, key, src->items[i]->float_value);
+            break;
+        case METADATA_ITEM__VALUE_STRING_VALUE:
+            add_custom_metadata_string(dst, key, strdup(src->items[i]->string_value));
+            break;
+        default:
+            break;
         }
-      } else {
-        dst_item->string_value = NULL;
-      }
-      break;
-
-    default:
-      break;
     }
-  }
+ 
+    return 0;
 }

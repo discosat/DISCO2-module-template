@@ -31,8 +31,6 @@ void module()
         signal_error_and_exit(INVALID_TARGET_SIZE);
     }
 
-    printf("[DEBUG-resizer] target size: %d\n", target_size);
-
     /* Example code for iterating a pixel value at a time */
     for (int i = 0; i < num_images; ++i)
     {
@@ -138,22 +136,21 @@ void module()
         
         /* Copy demosaiced data to output buffer */
         memcpy(output_image_data, thumbnailImage.data, output_size);
+
+        Metadata new_meta = METADATA__INIT;
+            if (clone_metadata(input_meta, &new_meta) != 0)
+            {
+                signal_error_and_exit(MALLOC_ERR);
+            }
         
         /* Create output image metadata */
-        Metadata new_meta = METADATA__INIT;
-        new_meta.size = output_size;
+         new_meta.size = output_size;
         new_meta.width = new_width;
         new_meta.height = new_height;
-        new_meta.channels = input_meta->channels;
-        new_meta.bits_pixel = input_meta->bits_pixel;
-        new_meta.timestamp = input_meta->timestamp;
-        new_meta.obid = input_meta->obid;
-        new_meta.camera = input_meta->camera;
-        
+
         /* Add custom metadata for demosaicing info */
         add_custom_metadata_int(&new_meta,"resized", target_size);
-
-        
+ 
         /* Append the processed image to the result batch */
         append_result_image(output_image_data, output_size, &new_meta);
         

@@ -120,19 +120,17 @@ void module()
         } else {
             signal_error_and_exit(INVALID_NORMALIZATION_VALUE);
         }
+
+        Metadata new_meta = METADATA__INIT;
+            if (clone_metadata(input_meta, &new_meta) != 0)
+            {
+                signal_error_and_exit(MALLOC_ERR);
+            }
         
         /* Create output image metadata */
-        Metadata new_meta = METADATA__INIT;
         new_meta.size = output_size;
-        new_meta.width = width;
-        new_meta.height = height;
         new_meta.channels = 3; // BGR output
-        new_meta.timestamp = input_meta->timestamp;
         new_meta.bits_pixel = output_bits_pixel;
-        new_meta.camera = input_meta->camera;
-        new_meta.obid = input_meta->obid;
-        
-        copy_metadata_items(&new_meta, input_meta);
 
         /* Add custom metadata for demosaicing info */
         add_custom_metadata_string(&new_meta, "processing", "demosaiced");
@@ -140,7 +138,7 @@ void module()
         add_custom_metadata_string(&new_meta, "orientation", "flipped_vertical");
         
         /* Append the processed image to the result batch */
-        append_result_image(output_image_data, output_size, &new_meta);
+        append_result_image(output_image_data, output_size, input_meta);
         
         /* Free allocated memory */
         free(input_image_data);

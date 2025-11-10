@@ -171,6 +171,8 @@ float get_custom_metadata_float(Metadata *data, char *key);
  */
 char *get_custom_metadata_string(Metadata *data, char *key);
 
+int clone_metadata(Metadata *src, Metadata *dst);
+
 /**
  * Append an image to the resulting batch in the module configuration.
  *
