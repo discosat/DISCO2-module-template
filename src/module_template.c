@@ -33,7 +33,12 @@ void module()
         unsigned char *image_data;
         size_t size = get_image_data(i, &image_data);
 
+        /* Create image metadata before appending */
         Metadata new_meta = METADATA__INIT;
+            if (clone_metadata(input_meta, &new_meta) != 0)
+            {
+                signal_error_and_exit(MALLOC_ERR);
+            }     
         new_meta.size = input_meta->size;
         new_meta.width = input_meta->width;
         new_meta.height = input_meta->height;

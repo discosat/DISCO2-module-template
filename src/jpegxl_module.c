@@ -100,19 +100,20 @@ void module()
             signal_error_and_exit(JXL_ENC_PROCESS);
 
         int enc_size = output_buffer_size - out_buf_remain; //calculate compressed size
-
-        /* Create image metadata before appending */
+        
         Metadata new_meta = METADATA__INIT;
+            if (clone_metadata(input_meta, &new_meta) != 0)
+            {
+                signal_error_and_exit(MALLOC_ERR);
+            }
+        
+        /* Create output image metadata */
         new_meta.size = enc_size;
-        new_meta.width = width;
-        new_meta.height = height;
-        new_meta.channels = channels;
-        new_meta.timestamp = timestamp;
-        new_meta.bits_pixel = bits_pixel;
-        new_meta.camera = camera;
-        add_custom_metadata_string(&new_meta, "enc", "jxl");
 
-        /* Append the image to the result batch */
+        /* Add custom metadata for demosaicing info */
+        add_custom_metadata_string(&new_meta, "enc", "jxl");
+        
+        /* Append the processed image to the result batch */
         append_result_image(output_buffer, enc_size, &new_meta);
 
         /* Remember to free any allocated memory */

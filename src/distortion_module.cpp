@@ -104,17 +104,14 @@ void module()
         memcpy(output_image_data, undistorted_image.data, size);
 
         Metadata new_meta = METADATA__INIT;
-        new_meta.size = size;
-        new_meta.width = width;
-        new_meta.height = height;
-        new_meta.channels = channels;
-        new_meta.timestamp = timestamp;
-        new_meta.bits_pixel = bits_pixel;
-        new_meta.camera = camera;
-        new_meta.obid = input_meta->obid;
+        if (clone_metadata(input_meta, &new_meta) != 0)
+        {
+            signal_error_and_exit(MALLOC_ERR);
+        }
 
         add_custom_metadata_bool(&new_meta, "distortion_corrected", true);
 
+        /* Append the processed image to the result batch */
         append_result_image(output_image_data, size, &new_meta);
 
         free(input_image_data);

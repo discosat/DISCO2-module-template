@@ -138,7 +138,7 @@ void module()
         add_custom_metadata_string(&new_meta, "orientation", "flipped_vertical");
         
         /* Append the processed image to the result batch */
-        append_result_image(output_image_data, output_size, input_meta);
+        append_result_image(output_image_data, output_size, &new_meta);
         
         /* Free allocated memory */
         free(input_image_data);
