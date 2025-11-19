@@ -57,7 +57,7 @@ void module()
         /* Create OpenCV Mat for raw image (12-bit data in 16-bit container) */
         cv::Mat rawImage(height, width, CV_16UC1, (uint16_t*)input_image_data); 
 
-        if (rawImage.empty() || rawImage.data == NULL){
+        if (rawImage.empty()){
             signal_error_and_exit(OPENCV_ERR);
         }
         
@@ -68,10 +68,6 @@ void module()
         if (demosaicedImage.empty() || demosaicedImage.data == NULL){
             signal_error_and_exit(OPENCV_DEM_ERR);
         }
-
-        /* Apply vertical flip to match camera orientation */
-        //cv::Mat finalImage;
-        //cv::flip(demosaicedImage, finalImage, 0);  // 0 means vertical flip
         
         cv::Point2f center(width / 2.0f, height / 2.0f);
         double angle = 180;
@@ -89,8 +85,10 @@ void module()
             signal_error_and_exit(OPENCV_ROT_ERR);
         }
 
+        int container = (normalization_value == 255) ? CV_8U : CV_16U;
+
         cv::Mat normalized_Image;
-        cv::normalize(rotated_image, normalized_Image, 0, normalization_value, cv::NORM_MINMAX);
+        cv::normalize(rotated_image, normalized_Image, 0, normalization_value, cv::NORM_MINMAX, container);
 
         if (normalized_Image.empty() || normalized_Image.data == NULL){
             signal_error_and_exit(OPENCV_NORM_ERR);
@@ -111,15 +109,7 @@ void module()
         /* Copy demosaiced data to output buffer */
         memcpy(output_image_data, normalized_Image.data, output_size);
 
-        int output_bits_pixel;
-
-        if (normalization_value == 255) {
-            output_bits_pixel = 8;   // 8-bit normalization
-        } else if (normalization_value == 65535) {
-            output_bits_pixel = 16;  // 16-bit normalization
-        } else {
-            signal_error_and_exit(INVALID_NORMALIZATION_VALUE);
-        }
+        int output_bits_pixel = (normalization_value == 255) ? 8 : 16;
 
         Metadata new_meta = METADATA__INIT;
             if (clone_metadata(input_meta, &new_meta) != 0)
@@ -135,7 +125,7 @@ void module()
         /* Add custom metadata for demosaicing info */
         add_custom_metadata_string(&new_meta, "processing", "demosaiced");
         add_custom_metadata_int(&new_meta, "output_channels", 3);
-        add_custom_metadata_string(&new_meta, "orientation", "flipped_vertical");
+        add_custom_metadata_string(&new_meta, "orientation", "rotated_180");
         
         /* Append the processed image to the result batch */
         append_result_image(output_image_data, output_size, &new_meta);
