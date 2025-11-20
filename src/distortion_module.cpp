@@ -83,7 +83,10 @@ void module()
         unsigned char *input_image_data;
         size_t size = get_image_data(i, &input_image_data);
 
-        cv::Mat input_image(height, width, (channels == 3) ? CV_16UC3 : CV_16UC1, input_image_data);
+        int cv_depth = (bits_pixel == 8) ? CV_8U : CV_16U;
+        int cv_type = (channels == 3) ? CV_MAKETYPE(cv_depth, 3) : CV_MAKETYPE(cv_depth, 1);
+
+        cv::Mat input_image(height, width, cv_type, input_image_data);
 
                 if (input_image.empty() || input_image.data == NULL) {
             signal_error_and_exit(OPENCV_ERR);

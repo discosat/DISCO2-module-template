@@ -63,55 +63,39 @@ void module()
             signal_error_and_exit(INVALID_NEW_INPUT_VALUES);
         }
 
-        cv::Mat rawImage;
+        int cv_depth = (bits_pixel == 8) ? CV_8U : 
+                       (bits_pixel == 16) ? CV_16U : 
+                       (signal_error_and_exit(INVALID_INPUT_VALUES), CV_8U);
 
-        if (channels == 1) {
-            if (bits_pixel == 8) {
-                rawImage = cv::Mat(height, width, CV_8UC1, input_image_data);
-            } else if (bits_pixel == 16) { 
-                rawImage = cv::Mat(height, width, CV_16UC1, input_image_data);
-            } else {
-                signal_error_and_exit(INVALID_INPUT_VALUES);
-            }
-            } else if (channels == 3) {
-            if (bits_pixel == 8) {
-                rawImage = cv::Mat(height, width, CV_8UC3, input_image_data);
-            } else if (bits_pixel == 16) {
-                rawImage = cv::Mat(height, width, CV_16UC3, input_image_data);
-            } else {
-                signal_error_and_exit(INVALID_INPUT_VALUES);
-            }
-            } else {
-                signal_error_and_exit(INVALID_INPUT_VALUES);
-            }
+        int cv_type = (channels == 1) ? CV_MAKETYPE(cv_depth, 1) :
+                      (channels == 3) ? CV_MAKETYPE(cv_depth, 3) :
+                      (signal_error_and_exit(INVALID_INPUT_VALUES), CV_8UC1);
 
-            if (rawImage.empty() || rawImage.data == NULL) {
-                signal_error_and_exit(OPENCV_ERR);
-            }
+        cv::Mat rawImage(height, width, cv_type, input_image_data);
+
+        if (rawImage.empty()) {
+            signal_error_and_exit(OPENCV_ERR);
+        }
 
         if (save_og)
         {
             size_t og_size = rawImage.total() * rawImage.elemSize();
             unsigned char *og_copy = (unsigned char *)malloc(og_size);
-        if (og_copy == NULL)
-            signal_error_and_exit(MALLOC_ERR);
-
+            if (og_copy == NULL) {
+                signal_error_and_exit(MALLOC_ERR);
+            }
+        
             memcpy(og_copy, rawImage.data, og_size);
-
+        
             Metadata og_meta = METADATA__INIT;
-            og_meta.size = og_size;
-            og_meta.width = width;
-            og_meta.height = height;
-            og_meta.channels = channels;
-            og_meta.bits_pixel = bits_pixel;
-            og_meta.timestamp = input_meta->timestamp;
-            og_meta.obid = input_meta->obid;
-            og_meta.camera = input_meta->camera;
+            if (clone_metadata(input_meta, &og_meta) != 0) {
+                signal_error_and_exit(MALLOC_ERR);
+            }
 
+            og_meta.size = og_size;  // Only thing that changes
             add_custom_metadata_int(&og_meta, "saved_original", 1);
-
+        
             append_result_image(og_copy, og_size, &og_meta);
-
             free(og_copy);
         }
 
