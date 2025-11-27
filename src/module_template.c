@@ -24,6 +24,10 @@ void module()
     {
         Metadata *input_meta = get_metadata(i);
 
+        int exposure = get_custom_metadata_int(input_meta, "exposure");
+        float iso = get_custom_metadata_float(input_meta, "iso");
+        int pipeline_id = get_custom_metadata_int(input_meta, "pipeline_id");
+
         /* Get custom metadata values */
         // int example_bool = get_custom_metadata_bool(input_meta, "example_bool");
         // int int_example = get_custom_metadata_int(input_meta, "example_int");
