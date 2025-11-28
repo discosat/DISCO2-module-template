@@ -1,5 +1,5 @@
-project('jpegxl', 'c', 'cpp')
-project_name = 'jpegxl'
+project('classification', 'c', 'cpp')
+project_name = 'classification'
 
 # Compiler and linker flags
 cflags = ['-Wall', '-g', '-O0']
@@ -12,7 +12,15 @@ proto_c_dep = cc.find_library('protobuf-c', required: false)
 opencv_dep = dependency('opencv4', required: true)
 jxl_dep = dependency('libjxl', required: true)
 jxl_threads_dep = dependency('libjxl_threads', required: true)
+vips_dep = dependency('vips', required: true)
+#openjp2_dep = dependency('libopenjp2', required: true)
 
+# Manually defined OpenJPEG to avoid Yocto sysroot prefixing issues
+openjp2_inc = include_directories('/home/buoe/openjpeg/build_aarch64/install/include/openjpeg-2.5')
+tflite_dep = cpp.find_library('tensorflow-lite', required: true)
+cc = meson.get_compiler('c')
+openjp2_lib = cc.find_library('openjp2', dirs : '/home/buoe/openjpeg/build_aarch64/install/lib')
+openjp2_dep = declare_dependency(include_directories : openjp2_inc, dependencies : openjp2_lib)
 
 # Source files
 c_sources = [
@@ -26,7 +34,7 @@ c_sources = [
 ]
 
 # Change this to switch the active module!
-active_module = 'src/jpegxl_module.c' # <-- Change this to switch modules
+active_module = 'src/tflite_classification.cpp' # <-- Change this to switch modules
 
 # Build sources array similar to reference
 sources = c_sources + [active_module]
@@ -38,7 +46,7 @@ dirs = include_directories(
 )
 
 # Dependencies array
-deps = [proto_c_dep, opencv_dep, jxl_dep, jxl_threads_dep]
+deps = [proto_c_dep, opencv_dep, jxl_dep, jxl_threads_dep, vips_dep, openjp2_dep, tflite_dep]
 
 # Shared library (SO)
 shared_library(project_name, sources,
