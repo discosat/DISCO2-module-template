@@ -156,7 +156,7 @@ void module()
         new_meta.obid = obid;
 
         /* Add custom metadata for color correction info */
-        add_custom_metadata_string(&new_meta, "processing", "color-corrected");
+        add_custom_metadata_string(&new_meta, "correction", "color-corrected");
         add_custom_metadata_int(&new_meta, "temperature", temperature);
 
         /* Append the image to the result batch */
