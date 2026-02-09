@@ -291,6 +291,37 @@ https://libjxl.readthedocs.io/en/latest/api_encoder.html#_CPPv4N24JxlEncoderFram
 | 703       | OpenCV Error: Matrices error          |
 | 707       | Input error: Inavlid camera name      |
 
+###JPEG2000 module
+compression ratio:
+0 = lossless (but your lossy bool handles this)
+1 = no compression (1:1)
+5-10 = high quality
+10-20 = good quality, decent size reduction
+20-50 = moderate quality, significant compression
+50-100 = low quality, aggressive compression
+
+For satellite imagery, I'd suggest default of 20 as a starting point.
+
+num_resolution:
+811
+Resolution 6: 2848x2848
+Resolution 5: 1424x1424
+Resolution 4: 712x712
+Resolution 3: 356x356
+Resolution 2: 178x178
+Resolution 1: 89x89
+Resolution 0: 44x44
+max safe 7 - recommended 5-6
+
+507
+Resolution 6: 2056x2464
+Resolution 5: 1028x1232
+Resolution 4: 514x616
+Resolution 3: 257x308
+Resolution 2: 128x154
+Resolution 1: 64x77
+Resolution 0: 32x38
+max safe 7 - recommended 5-6
 
 ### Extra branches
 We have multiple branches with different modules that can be used as is or as inspiration - always test before implementing anything.

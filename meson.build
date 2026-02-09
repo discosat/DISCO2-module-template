@@ -1,5 +1,5 @@
-project('jpegxl', 'c', 'cpp')
-project_name = 'jpegxl'
+project('color', 'c', 'cpp')
+project_name = 'color'
 
 # Compiler and linker flags
 cflags = ['-Wall', '-g', '-O0']
@@ -12,6 +12,8 @@ proto_c_dep = cc.find_library('protobuf-c', required: false)
 opencv_dep = dependency('opencv4', required: true)
 jxl_dep = dependency('libjxl', required: true)
 jxl_threads_dep = dependency('libjxl_threads', required: true)
+openjp2_dep = dependency('libopenjp2', required: true)
+vips_dep = dependency('vips', required: true)
 
 
 # Source files
@@ -26,7 +28,7 @@ c_sources = [
 ]
 
 # Change this to switch the active module!
-active_module = 'src/jpegxl_module.c' # <-- Change this to switch modules
+active_module = 'src/color_module.cpp' # <-- Change this to switch modules
 
 # Build sources array similar to reference
 sources = c_sources + [active_module]
@@ -35,10 +37,11 @@ sources = c_sources + [active_module]
 dirs = include_directories(
     'src/include',
     'src/include/utils',
+    'src/lut_data',
 )
 
 # Dependencies array
-deps = [proto_c_dep, opencv_dep, jxl_dep, jxl_threads_dep]
+deps = [proto_c_dep, opencv_dep, jxl_dep, jxl_threads_dep, openjp2_dep, vips_dep]
 
 # Shared library (SO)
 shared_library(project_name, sources,

@@ -16,20 +16,28 @@ void module()
     /* Example code for iterating a pixel value at a time */
     for (int i = 0; i < num_images; ++i)
     {
-        Metadata *input_meta = get_metadata(i);
         
         unsigned char *input_image_data;
         size_t size = get_image_data(i, &input_image_data);
 
+        /* Get input image metadata */
+        Metadata *input_meta = get_metadata(i);
+        int height = input_meta->height;
+        int width = input_meta->width;
+        int channels = input_meta->channels;
+        int timestamp = input_meta->timestamp;
+        int bits_pixel = input_meta->bits_pixel;
+        char *camera = input_meta->camera;
+        int obid = input_meta->obid;
+        int exposure = get_custom_metadata_int(input_meta, "exposure");
+        float iso = get_custom_metadata_float(input_meta, "iso");
+        int pipeline_id = get_custom_metadata_int(input_meta, "pipeline_id");
+
         Metadata new_meta = METADATA__INIT;
-        new_meta.size = input_meta->size;
-        new_meta.width = input_meta->width;
-        new_meta.height = input_meta->height;
-        new_meta.channels = input_meta->channels;
-        new_meta.timestamp = input_meta->timestamp;
-        new_meta.bits_pixel = input_meta->bits_pixel;
-        new_meta.camera = input_meta->camera;
-        new_meta.obid = input_meta->obid;
+            if (clone_metadata(input_meta, &new_meta) != 0)
+            {
+                signal_error_and_exit(MALLOC_ERR);
+            }
 
         /* Append the image to the result batch */
         append_result_image(input_image_data, size, &new_meta);

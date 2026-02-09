@@ -7,3 +7,4 @@ testing-dead-pixels
 testing-demosaic
 testing-thumbnail
 meson.build
+src/lut_data/*.h
