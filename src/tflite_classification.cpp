@@ -1,6 +1,5 @@
 #include "module.h"
 #include "util.h"
-#include "logger.h"
 
 #include <filesystem>
 #include <tensorflow/lite/delegates/external/external_delegate.h>

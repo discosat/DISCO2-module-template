@@ -1,7 +1,7 @@
 #include "module.h"
 #include "util.h"
 #include <stdbool.h>
-#include <openjpeg-2.5/openjpeg.h>
+#include <openjpeg.h>
 #include <string.h>
 #include <vips/vips.h>
 #include <vips/image.h>
