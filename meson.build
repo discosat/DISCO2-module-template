@@ -1,5 +1,5 @@
-project('classification', 'c', 'cpp')
-project_name = 'classification'
+project('jpeg2000', 'c', 'cpp')
+project_name = 'jpeg2000'
 
 # Compiler and linker flags
 cflags = ['-Wall', '-g', '-O0']
@@ -27,7 +27,7 @@ c_sources = [
 ]
 
 # Change this to switch the active module!
-active_module = 'src/tflite_classification.cpp' # <-- Change this to switch modules
+active_module = 'src/jpeg2000_module.c' # <-- Change this to switch modules
 
 # Build sources array similar to reference
 sources = c_sources + [active_module]
@@ -36,18 +36,27 @@ sources = c_sources + [active_module]
 dirs = include_directories(
     'src/include',
     'src/include/utils',
-    'src/lut_data',
 )
 
 # Dependencies array
 deps = [proto_c_dep, opencv_dep, jxl_dep, jxl_threads_dep, openjp2_dep, tflite_dep]
 
 # Shared library (SO)
-shared_library(project_name, sources,
+lib = shared_library(project_name, sources,
     include_directories: dirs,
     c_args: cflags + ['-DSHARED_MEMORY=1'],
     cpp_args: cppflags + ['-DSHARED_MEMORY=1'],
     dependencies: deps
+)
+
+# Fix libopenjp2 NEEDED entry: the sysroot library has SONAME libopenjp2.so.7
+# but the target (yocto) only ships libopenjp2.so.2.4.0
+patchelf = find_program('patchelf')
+custom_target('patch_openjp2_soname',
+    input: lib,
+    output: 'lib' + project_name + '.patched',
+    command: [patchelf, '--replace-needed', 'libopenjp2.so.7', 'libopenjp2.so.2.4.0', '@INPUT@'],
+    build_by_default: true
 )
 
 # Check for cross-compiling
