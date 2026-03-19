@@ -2,8 +2,8 @@ project('disco-modules', 'c', 'cpp',
     default_options: ['c_std=c11', 'cpp_std=c++17'])
 
 # Compiler and linker flags
-cflags = ['-Wall', '-O2', '-DSHARED_MEMORY=1']
-cppflags = ['-Wall', '-O2', '-DSHARED_MEMORY=1']
+cflags = ['-Wall', '-O2', '-DSHARED_MEMORY=1', '-D_GNU_SOURCE']
+cppflags = ['-Wall', '-O2', '-DSHARED_MEMORY=1', '-D_GNU_SOURCE']
 
 # Compilers
 cc = meson.get_compiler('c')
