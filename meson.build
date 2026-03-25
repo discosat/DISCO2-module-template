@@ -1,5 +1,5 @@
-project('jpeg2000', 'c', 'cpp')
-project_name = 'jpeg2000'
+project('rbayer_classification', 'c', 'cpp')
+project_name = 'rbayer_classification'
 
 # Compiler and linker flags
 cflags = ['-Wall', '-g', '-O0']
@@ -27,7 +27,7 @@ c_sources = [
 ]
 
 # Change this to switch the active module!
-active_module = 'src/jpeg2000_module.c' # <-- Change this to switch modules
+active_module = 'src/tflite_classification.cpp' # <-- Change this to switch modules
 
 # Build sources array similar to reference
 sources = c_sources + [active_module]

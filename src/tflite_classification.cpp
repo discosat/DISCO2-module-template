@@ -1,6 +1,7 @@
 #include "module.h"
 #include "util.h"
-#include "logger.h"
+//#include "logger.h"
+#include "stdio.h"
 
 #include <filesystem>
 #include <tensorflow/lite/delegates/external/external_delegate.h>
@@ -30,17 +31,24 @@ void module()
 
     /* Get number of images in input batch */
     int num_images = get_input_num_images();
+    printf("\t-* num_images: %d\n", num_images);
 
     /* Retrieve module parameters by name (defined in config.yaml) */
     char *model_filename = get_param_string("model_filename");
+    printf("\t-* model_name: %s\n", model_filename);
 
     // Retrieve the class idx of interest
     // This is the class that will be kept, the other class will be set to all black for better compression
     int class_idx = get_param_int("class_index");
+    printf("\t-* class_idx: %d\n", class_idx);
 
     // Load the model
     std::unique_ptr<tflite::FlatBufferModel> model =
         tflite::FlatBufferModel::BuildFromFile(model_filename);
+    if(model == nullptr)
+    {
+    	printf("\t-* Error loading the model '%s' (model: Nullptr)", model_filename);
+    }
 
     // Define resolver
     tflite::ops::builtin::BuiltinOpResolver resolver;
@@ -50,10 +58,12 @@ void module()
     std::unique_ptr<tflite::Interpreter> interpreter;
     if (builder(&interpreter) != kTfLiteOk)
     {
+	printf("\t-* Error building the interpreter (kTfLiteOk: False)\n");
         signal_error_and_exit(INTERPRET_INIT);
     }
     if (interpreter == nullptr)
     {
+	printf("\t-* Error building the interpreter (interpreter: Nullptr)");
         signal_error_and_exit(INTERPRET_INIT);
     }
 
