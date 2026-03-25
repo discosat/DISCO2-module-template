@@ -148,7 +148,7 @@ void run_classif()
         }
 
         // uint8_t *scores = interpreter->typed_output_tensor<uint8_t>(0);
-        float max_val = -1.0;ß
+        float max_val = -1.0;
         int max_cls = -1;
         uint8_t *scores = interpreter->typed_output_tensor<uint8_t>(0);
         for (int j = 0; j < output_size; ++j)
