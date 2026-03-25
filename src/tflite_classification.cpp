@@ -180,6 +180,7 @@ void run_classif()
             append_result_image(input_image_data, size, &new_meta);
         }
 
+        printf("\t-* MADE IT HERE (no 'free' called manually)\n");
         // Free the input image
         //free_test(input_image_data);
     }
