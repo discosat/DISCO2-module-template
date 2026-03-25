@@ -1,6 +1,6 @@
 #include "module.h"
 #include "util.h"
-//#include "logger.h"
+// #include "logger.h"
 #include "stdio.h"
 
 #include <filesystem>
@@ -25,10 +25,15 @@ enum ERROR_CODE
     INFER_ERR = 4,
 };
 
-/* START MODULE IMPLEMENTATION */
-void module()
+void free_test(uint8_t *input_image_data)
 {
+    printf("\t-* attempting to free input_image_data...\n");
+    free(input_image_data);
+}
 
+// Separate function (for debugging purposes)
+void run_classif()
+{
     /* Get number of images in input batch */
     int num_images = get_input_num_images();
     printf("\t-* num_images: %d\n", num_images);
@@ -45,9 +50,9 @@ void module()
     // Load the model
     std::unique_ptr<tflite::FlatBufferModel> model =
         tflite::FlatBufferModel::BuildFromFile(model_filename);
-    if(model == nullptr)
+    if (model == nullptr)
     {
-    	printf("\t-* Error loading the model '%s' (model: Nullptr)", model_filename);
+        printf("\t-* Error loading the model '%s' (model: Nullptr)", model_filename);
     }
 
     // Define resolver
@@ -58,18 +63,19 @@ void module()
     std::unique_ptr<tflite::Interpreter> interpreter;
     if (builder(&interpreter) != kTfLiteOk)
     {
-	printf("\t-* Error building the interpreter (kTfLiteOk: False)\n");
+        printf("\t-* Error building the interpreter (kTfLiteOk: False)\n");
         signal_error_and_exit(INTERPRET_INIT);
     }
     if (interpreter == nullptr)
     {
-	printf("\t-* Error building the interpreter (interpreter: Nullptr)");
+        printf("\t-* Error building the interpreter (interpreter: Nullptr)");
         signal_error_and_exit(INTERPRET_INIT);
     }
 
     // Load the custom delegate
     auto ext_delegate_option =
         TfLiteExternalDelegateOptionsDefault("/usr/lib/libvx_delegate.so");
+    printf("\t-* lLoaded custom delegate '/usr/lib/libvx_delegate.so'\n");
 
     // set the caching options
     const char *allow_cache_key = "allowed_cache_mode";
@@ -90,12 +96,14 @@ void module()
     // Modify the graph with delegate
     if (interpreter->ModifyGraphWithDelegate(ext_delegate_ptr) != kTfLiteOk)
     {
+        printf("\t-* Error modifying graph with delegate (kTfLiteOk: False)\n");
         signal_error_and_exit(INTERPRET_INIT);
     }
 
     // Allocate the tensors
     if (interpreter->AllocateTensors() != kTfLiteOk)
     {
+        printf("\t-* Error allocating tensors (kTfLiteOk: False)\n");
         signal_error_and_exit(TENSOR_ALLOC);
     }
     // Get quantization parameters
@@ -111,7 +119,6 @@ void module()
     // assume output dims to be something like (1, 1, ... ,size)
     auto output_size = output_dims->data[output_dims->size - 1];
 
-
     for (int i = 0; i < num_images; ++i)
     {
         Metadata *input_meta = get_metadata(i);
@@ -123,7 +130,6 @@ void module()
         uint8_t *input_image_data;
         size_t size = get_image_data(i, &input_image_data);
 
-
         // Get input tensor pointer and expected size each iteration (avoid stale pointer)
         int input_index = interpreter->inputs()[0];
         uint8_t *input_tensor = interpreter->typed_tensor<uint8_t>(input_index);
@@ -134,10 +140,10 @@ void module()
         // Copy image data to tensor
         memcpy(input_tensor, input_image_data, expected_bytes);
 
-
         // infer and deal with the result
         if (interpreter->Invoke() != kTfLiteOk)
         {
+            printf("\t-* Inference error (kTfLiteOk: False)\n");
             signal_error_and_exit(INFER_ERR);
         }
 
@@ -155,7 +161,6 @@ void module()
             }
         }
 
-
         // logger_log(logger, LOG_INFO, "Got the top class.");
 
         // send only the patches that match the class idx of interest
@@ -164,6 +169,7 @@ void module()
             Metadata new_meta = METADATA__INIT;
             if (clone_metadata(input_meta, &new_meta) != 0)
             {
+                printf("\t-* Memory allocation error (clone_metadata NOT 0)\n");
                 signal_error_and_exit(MALLOC_ERR);
             }
 
@@ -172,14 +178,18 @@ void module()
 
             /* Append the image to the result batch */
             append_result_image(input_image_data, size, &new_meta);
-
         }
 
         // Free the input image
-        free(input_image_data);
-
+        free_test(input_image_data);
     }
+}
 
+/* START MODULE IMPLEMENTATION */
+void module()
+{
+    printf("\t-* Running tflite classification...: \n");
+    run_classif();
 }
 /* END MODULE IMPLEMENTATION */
 
