@@ -6,6 +6,7 @@
 #include "util.h"
 
 void finalize() {
+    printf("\t-* 'finalize' called \n");
     if (SHARED_MEMORY == 0) return;
 
     struct shmid_ds info;
@@ -50,6 +51,7 @@ void finalize() {
 
         memcpy(shmaddr, result->data, result->batch_size);
         free(result->data);
+        printf("\t-* free (1) \n");
         
         if (shmdt(shmaddr) == -1) {
             signal_error_and_exit(301);
@@ -58,6 +60,7 @@ void finalize() {
         // No resize is needed: We can utilize the old shared memory space
         memcpy(input->data, result->data, result->batch_size); // copy new data to shared memory space of old data
         free(result->data);
+        printf("\t-* free (2) \n");
         result->shmid = input->shmid; // copy the shared memory key, as we are reusing the space
         if (shmdt(input->data) == -1) {
             signal_error_and_exit(301);
