@@ -75,9 +75,6 @@ void module()
         int bits_pixel = input_meta->bits_pixel;
         char *camera = input_meta->camera;
         int obid = input_meta->obid;
-        int exposure = get_custom_metadata_int(input_meta, "exposure");
-        float iso = get_custom_metadata_float(input_meta, "iso");
-        int pipeline_id = get_custom_metadata_int(input_meta, "pipeline_id");
 
         if (channels != 3) {
             signal_error_and_exit(INVALID_CHANNELS_ERR);
