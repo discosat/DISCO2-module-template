@@ -76,9 +76,8 @@ int compress_rgb_to_jp2(const unsigned char* input_data, int width, int height,
     int bytes_per_sample = (bits_pixel > 8) ? 2 : 1;
 
     /* Set up component parameters */
-    opj_image_cmptparm_t *cmptparm = calloc(channels, sizeof(opj_image_cmptparm_t));
-    if (!cmptparm)
-        return 0;
+    opj_image_cmptparm_t cmptparm[3];
+    memset(cmptparm, 0, channels * sizeof(opj_image_cmptparm_t));
 
     for (int c = 0; c < channels; c++) {
         cmptparm[c].dx = 1;
@@ -96,7 +95,6 @@ int compress_rgb_to_jp2(const unsigned char* input_data, int width, int height,
         color_space = OPJ_CLRSPC_GRAY;
 
     opj_image_t *image = opj_image_create(channels, cmptparm, color_space);
-    free(cmptparm);
     if (!image)
         return 0;
 
@@ -106,21 +104,17 @@ int compress_rgb_to_jp2(const unsigned char* input_data, int width, int height,
     image->y1 = (OPJ_UINT32)height;
 
     /* Copy interleaved pixel data into planar component arrays */
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            int pixel_idx = y * width + x;
-            for (int c = 0; c < channels; c++) {
-                int sample_offset = (pixel_idx * channels + c) * bytes_per_sample;
-                OPJ_INT32 val;
-                if (bytes_per_sample == 2) {
-                    val = (OPJ_INT32)(input_data[sample_offset]
-                                      | (input_data[sample_offset + 1] << 8));
-                } else {
-                    val = (OPJ_INT32)input_data[sample_offset];
-                }
-                image->comps[c].data[pixel_idx] = val;
-            }
-        }
+    int total_pixels = width * height;
+
+    if (bytes_per_sample == 1) {
+        for (int i = 0; i < total_pixels; i++)
+            for (int c = 0; c < channels; c++)
+                image->comps[c].data[i] = input_data[i * channels + c];
+    } else {
+        const uint16_t *src16 = (const uint16_t *)input_data;
+        for (int i = 0; i < total_pixels; i++)
+            for (int c = 0; c < channels; c++)
+                image->comps[c].data[i] = src16[i * channels + c];
     }
 
     /* Set up compression parameters */
@@ -153,7 +147,9 @@ int compress_rgb_to_jp2(const unsigned char* input_data, int width, int height,
     }
 
     /* Create memory-backed output stream */
-    size_t initial_cap = (size_t)width * height * channels * bytes_per_sample;
+    size_t initial_cap = ((size_t)width * height * channels * bytes_per_sample) / 4;
+    if (initial_cap < 4096)
+        initial_cap = 4096;
     mem_stream_t mstream = {
         .data = malloc(initial_cap),
         .size = 0,
