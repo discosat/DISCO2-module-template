@@ -3,6 +3,16 @@
 #include <stdbool.h>
 #include <openjpeg.h>
 #include <string.h>
+#include <stdio.h>
+
+static void opj_error_cb(const char *msg, void *data) {
+    (void)data;
+    fprintf(stderr, "OPJ ERROR: %s\n", msg);
+}
+static void opj_warning_cb(const char *msg, void *data) {
+    (void)data;
+    fprintf(stderr, "OPJ WARNING: %s\n", msg);
+}
 
 /* Define custom error codes */
 enum ERROR_CODE {
