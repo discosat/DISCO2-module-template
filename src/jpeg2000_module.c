@@ -73,12 +73,14 @@ int compress_rgb_to_jp2(const unsigned char* input_data, int width, int height,
                         int channels, int bits_pixel, void** out_buffer,
                         size_t* out_len, bool islossless, int quality)
 {
-    int bytes_per_sample = (bits_pixel > 8) ? 2 : 1;
+    fprintf(stderr, "compress_rgb_to_jp2: start w=%d h=%d ch=%d bpp=%d lossless=%d quality=%d\n",
+            width, height, channels, bits_pixel, islossless, quality);
 
-    /* Set up component parameters */
+    int bytes_per_sample = (bits_pixel > 8) ? 2 : 1;
+    fprintf(stderr, "bytes_per_sample=%d\n", bytes_per_sample);
+
     opj_image_cmptparm_t cmptparm[3];
     memset(cmptparm, 0, channels * sizeof(opj_image_cmptparm_t));
-
     for (int c = 0; c < channels; c++) {
         cmptparm[c].dx = 1;
         cmptparm[c].dy = 1;
@@ -88,23 +90,30 @@ int compress_rgb_to_jp2(const unsigned char* input_data, int width, int height,
         cmptparm[c].sgnd = 0;
     }
 
-    OPJ_COLOR_SPACE color_space;
-    if (channels >= 3)
-        color_space = OPJ_CLRSPC_SRGB;
-    else
-        color_space = OPJ_CLRSPC_GRAY;
+    OPJ_COLOR_SPACE color_space = (channels >= 3) ? OPJ_CLRSPC_SRGB : OPJ_CLRSPC_GRAY;
+    fprintf(stderr, "color_space=%d\n", color_space);
 
     opj_image_t *image = opj_image_create(channels, cmptparm, color_space);
+    fprintf(stderr, "opj_image_create: %s\n", image ? "OK" : "FAILED");
     if (!image)
         return 0;
+
+    for (int c = 0; c < channels; c++) {
+        fprintf(stderr, "comp[%d].data=%p\n", c, (void*)image->comps[c].data);
+        if (!image->comps[c].data) {
+            fprintf(stderr, "NULL component data for channel %d, aborting\n", c);
+            opj_image_destroy(image);
+            return 0;
+        }
+    }
 
     image->x0 = 0;
     image->y0 = 0;
     image->x1 = (OPJ_UINT32)width;
     image->y1 = (OPJ_UINT32)height;
 
-    /* Copy interleaved pixel data into planar component arrays */
     int total_pixels = width * height;
+    fprintf(stderr, "starting pixel copy: total_pixels=%d\n", total_pixels);
 
     if (bytes_per_sample == 1) {
         for (int i = 0; i < total_pixels; i++)
@@ -116,46 +125,54 @@ int compress_rgb_to_jp2(const unsigned char* input_data, int width, int height,
             for (int c = 0; c < channels; c++)
                 image->comps[c].data[i] = src16[i * channels + c];
     }
+    fprintf(stderr, "pixel copy done\n");
 
-    /* Set up compression parameters */
     opj_cparameters_t parameters;
     opj_set_default_encoder_parameters(&parameters);
-    parameters.cod_format = 0; /* J2K codestream */
+    parameters.cod_format = 0;
     parameters.tcp_numlayers = 1;
     parameters.cp_disto_alloc = 1;
 
     if (islossless) {
-        parameters.irreversible = 0; /* 5-3 reversible wavelet */
-        parameters.tcp_rates[0] = 0; /* lossless */
+        parameters.irreversible = 0;
+        parameters.tcp_rates[0] = 0;
     } else {
-        parameters.irreversible = 1; /* 9-7 irreversible wavelet */
-        /* quality 1-100 maps to compression ratio: quality 100 = rate 1 (best),
-           quality 1 = rate 100 (most compressed) */
+        parameters.irreversible = 1;
         parameters.tcp_rates[0] = (float)(101 - quality);
     }
+    fprintf(stderr, "parameters set: irreversible=%d rate=%f\n",
+            parameters.irreversible, parameters.tcp_rates[0]);
 
     opj_codec_t *codec = opj_create_compress(OPJ_CODEC_J2K);
+    fprintf(stderr, "opj_create_compress: %s\n", codec ? "OK" : "FAILED");
     if (!codec) {
         opj_image_destroy(image);
         return 0;
     }
 
+    opj_set_error_handler(codec, opj_error_cb, NULL);
+    opj_set_warning_handler(codec, opj_warning_cb, NULL);
+
     if (!opj_setup_encoder(codec, &parameters, image)) {
+        fprintf(stderr, "opj_setup_encoder: FAILED\n");
         opj_destroy_codec(codec);
         opj_image_destroy(image);
         return 0;
     }
+    fprintf(stderr, "opj_setup_encoder: OK\n");
 
-    /* Create memory-backed output stream */
     size_t initial_cap = ((size_t)width * height * channels * bytes_per_sample) / 4;
     if (initial_cap < 4096)
         initial_cap = 4096;
+    fprintf(stderr, "initial_cap=%zu\n", initial_cap);
+
     mem_stream_t mstream = {
         .data = malloc(initial_cap),
         .size = 0,
         .capacity = initial_cap,
         .offset = 0,
     };
+    fprintf(stderr, "mstream.data=%p\n", (void*)mstream.data);
     if (!mstream.data) {
         opj_destroy_codec(codec);
         opj_image_destroy(image);
@@ -163,6 +180,7 @@ int compress_rgb_to_jp2(const unsigned char* input_data, int width, int height,
     }
 
     opj_stream_t *stream = opj_stream_create(OPJ_J2K_STREAM_CHUNK_SIZE, OPJ_FALSE);
+    fprintf(stderr, "opj_stream_create: %s\n", stream ? "OK" : "FAILED");
     if (!stream) {
         free(mstream.data);
         opj_destroy_codec(codec);
@@ -175,26 +193,37 @@ int compress_rgb_to_jp2(const unsigned char* input_data, int width, int height,
     opj_stream_set_seek_function(stream, mem_stream_seek);
     opj_stream_set_skip_function(stream, mem_stream_skip);
 
+    fprintf(stderr, "calling opj_start_compress\n");
     OPJ_BOOL ok = opj_start_compress(codec, image, stream);
-    if (ok)
+    fprintf(stderr, "opj_start_compress: %s\n", ok ? "OK" : "FAILED");
+
+    if (ok) {
+        fprintf(stderr, "calling opj_encode\n");
         ok = opj_encode(codec, stream);
-    if (ok)
+        fprintf(stderr, "opj_encode: %s\n", ok ? "OK" : "FAILED");
+    }
+
+    if (ok) {
+        fprintf(stderr, "calling opj_end_compress\n");
         ok = opj_end_compress(codec, stream);
+        fprintf(stderr, "opj_end_compress: %s\n", ok ? "OK" : "FAILED");
+    }
 
     opj_stream_destroy(stream);
     opj_destroy_codec(codec);
     opj_image_destroy(image);
 
     if (!ok) {
+        fprintf(stderr, "compression failed, freeing mstream\n");
         free(mstream.data);
         return 0;
     }
 
+    fprintf(stderr, "compress_rgb_to_jp2: success, out_len=%zu\n", mstream.size);
     *out_buffer = mstream.data;
     *out_len = mstream.size;
     return 1;
 }
-
 /* START MODULE IMPLEMENTATION */
 void module()
 {
